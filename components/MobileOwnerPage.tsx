@@ -31,8 +31,8 @@ export const MobileOwnerPage: React.FC<MobileOwnerPageProps> = ({ onNavigate, on
       {/* Top Bar */}
       <div className="sticky top-0 z-30 bg-slate-900/80 backdrop-blur-md border-b border-white/5 px-6 py-4 flex justify-between items-center">
         <div className="flex items-center gap-3">
-           <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-500 to-yellow-600 p-0.5">
-              <div className="w-full h-full bg-slate-900 rounded-full flex items-center justify-center font-bold text-amber-500">AM</div>
+           <div className="w-10 h-10 rounded-full bg-gradient-to-br from-sibos-orange to-red-600 p-0.5">
+              <div className="w-full h-full bg-slate-900 rounded-full flex items-center justify-center font-bold text-sibos-orange">AM</div>
            </div>
            <div>
               <div className="text-xs text-gray-400">Owner Dashboard</div>
@@ -41,22 +41,22 @@ export const MobileOwnerPage: React.FC<MobileOwnerPageProps> = ({ onNavigate, on
         </div>
         <button className="p-2 rounded-full bg-white/5 relative">
            <Bell size={20} />
-           <div className="absolute top-2 right-2 w-2 h-2 bg-amber-500 rounded-full border border-slate-900"></div>
+           <div className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border border-slate-900"></div>
         </button>
       </div>
 
       <div className="p-6 space-y-6">
          
          {/* Net Profit Card */}
-         <div className="bg-gradient-to-br from-amber-900/80 to-slate-900 rounded-3xl p-6 border border-amber-500/20 shadow-2xl relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/10 rounded-full blur-3xl -z-10"></div>
+         <div className="bg-gradient-to-br from-orange-900/80 to-slate-900 rounded-3xl p-6 border border-orange-500/20 shadow-2xl relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-orange-500/10 rounded-full blur-3xl -z-10"></div>
             
             <div className="flex justify-between items-start mb-6">
                <div>
-                  <div className="text-xs text-amber-200 font-bold uppercase tracking-wider mb-1 opacity-70">Omzet (Hari Ini)</div>
+                  <div className="text-xs text-orange-200 font-bold uppercase tracking-wider mb-1 opacity-70">Omzet (Hari Ini)</div>
                   <div className="text-3xl font-bold text-white tracking-tight">{formatCompact(stats.todayRevenue)}</div>
                </div>
-               <div className="p-2 bg-amber-500/20 rounded-full text-amber-400">
+               <div className="p-2 bg-orange-500/20 rounded-full text-orange-400">
                   <Wallet size={24} />
                </div>
             </div>
@@ -79,7 +79,7 @@ export const MobileOwnerPage: React.FC<MobileOwnerPageProps> = ({ onNavigate, on
          <div>
             <div className="flex justify-between items-center mb-4">
                <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider">Performa Outlet ({outlets.length})</h3>
-               <button className="text-xs text-amber-500 font-bold">Detail</button>
+               <button className="text-xs text-sibos-orange font-bold">Detail</button>
             </div>
             
             <div className="space-y-3">
@@ -123,7 +123,7 @@ export const MobileOwnerPage: React.FC<MobileOwnerPageProps> = ({ onNavigate, on
                              <div className="text-[10px] text-gray-500">{new Date(tx.date).toLocaleTimeString()}</div>
                          </div>
                          <div className="text-right">
-                             <div className="text-sm font-bold text-amber-500">+ Rp {tx.total.toLocaleString()}</div>
+                             <div className="text-sm font-bold text-green-400">+ Rp {tx.total.toLocaleString()}</div>
                              <div className="text-[10px] text-gray-500">{tx.paymentMethod.toUpperCase()}</div>
                          </div>
                      </div>
@@ -133,10 +133,10 @@ export const MobileOwnerPage: React.FC<MobileOwnerPageProps> = ({ onNavigate, on
          </div>
 
          {/* AI Insight */}
-         <div className="p-4 bg-gradient-to-r from-violet-900/40 to-slate-900 border border-violet-500/20 rounded-2xl">
+         <div className="p-4 bg-gradient-to-r from-orange-900/40 to-slate-900 border border-orange-500/20 rounded-2xl">
             <div className="flex items-center gap-2 mb-2">
-                <div className="w-2 h-2 bg-violet-500 rounded-full animate-pulse"></div>
-                <div className="text-xs font-bold text-violet-400">AI EXECUTIVE SUMMARY</div>
+                <div className="w-2 h-2 bg-orange-500 rounded-full animate-pulse"></div>
+                <div className="text-xs font-bold text-orange-400">AI EXECUTIVE SUMMARY</div>
             </div>
             <p className="text-xs text-gray-300 leading-relaxed">
                 "Tren penjualan hari ini positif. Outlet <strong>{outlets[0]?.name}</strong> menyumbang 40% total omzet. Pertimbangkan untuk menambah stok produk terlaris di sana."
@@ -149,21 +149,21 @@ export const MobileOwnerPage: React.FC<MobileOwnerPageProps> = ({ onNavigate, on
       <div className="fixed bottom-0 left-0 w-full bg-slate-900 border-t border-white/10 px-6 py-3 flex justify-between items-center z-40 pb-6">
          <button 
             onClick={() => setActiveTab('overview')}
-            className={`flex flex-col items-center gap-1 ${activeTab === 'overview' ? 'text-amber-500' : 'text-gray-500'}`}
+            className={`flex flex-col items-center gap-1 ${activeTab === 'overview' ? 'text-sibos-orange' : 'text-gray-500'}`}
          >
             <PieChart size={24} strokeWidth={activeTab === 'overview' ? 2.5 : 2} />
             <span className="text-[10px] font-medium">Bisnis</span>
          </button>
          <button 
             onClick={() => setActiveTab('finance')}
-            className={`flex flex-col items-center gap-1 ${activeTab === 'finance' ? 'text-amber-500' : 'text-gray-500'}`}
+            className={`flex flex-col items-center gap-1 ${activeTab === 'finance' ? 'text-sibos-orange' : 'text-gray-500'}`}
          >
             <DollarSign size={24} strokeWidth={activeTab === 'finance' ? 2.5 : 2} />
             <span className="text-[10px] font-medium">Keuangan</span>
          </button>
          <button 
             onClick={() => setActiveTab('growth')}
-            className={`flex flex-col items-center gap-1 ${activeTab === 'growth' ? 'text-amber-500' : 'text-gray-500'}`}
+            className={`flex flex-col items-center gap-1 ${activeTab === 'growth' ? 'text-sibos-orange' : 'text-gray-500'}`}
          >
             <TrendingUp size={24} strokeWidth={activeTab === 'growth' ? 2.5 : 2} />
             <span className="text-[10px] font-medium">Growth</span>

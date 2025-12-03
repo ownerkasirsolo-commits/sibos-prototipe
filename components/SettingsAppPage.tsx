@@ -1,14 +1,12 @@
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { 
   ArrowLeft, Settings, Store, Users, CreditCard, 
-  Database, Shield, Printer, Save, CheckCircle,
-  Upload, Image as ImageIcon, Monitor, Tv, ChefHat, Users as UsersIcon,
-  Tablet, AlertTriangle, Receipt, Percent, Mail, MapPin, Phone, Globe, FileText,
-  ExternalLink, File, X, LayoutGrid, ShoppingBag, Coffee, Calendar, Factory, Wrench, Plus,
-  Building2, Trash2, Edit3, ToggleLeft, ToggleRight, Lock, ChevronRight, Map,
-  Briefcase, ChevronDown, ChevronUp, Key, CheckSquare, Crown, BadgeCheck,
-  Clock, Wallet
+  Printer, Save, CheckCircle,
+  Image as ImageIcon,
+  Receipt, MapPin, FileText,
+  Wallet, ChevronRight, Briefcase, Plus, Trash2, Clock, LayoutGrid, X,
+  ToggleLeft, ToggleRight, ChevronDown, Check, Shield, User, Lock, Mail, Phone
 } from 'lucide-react';
 import { Page, HardwareModule, BusinessCategory, AppModule, Outlet } from '../types';
 import { GlassCard } from './ui/GlassCard';
@@ -24,6 +22,28 @@ interface SettingsAppPageProps {
   currentCategory?: BusinessCategory;
 }
 
+// Define available permissions explicitly
+const AVAILABLE_PERMISSIONS = [
+    'Void Transaksi', 
+    'Diskon Manual', 
+    'Refund / Retur', 
+    'Laporan Laba Rugi', 
+    'Edit Stok', 
+    'Tutup Kasir (Closing)', 
+    'Kelola User & Role', 
+    'Setting Hardware',
+    'Edit Produk',
+    'Akses CRM Member',
+    'Input Pengeluaran',
+    'Purchase Order'
+];
+
+interface RoleConfig {
+    id: string;
+    name: string;
+    permissions: string[]; // List of enabled permissions
+}
+
 export const SettingsAppPage: React.FC<SettingsAppPageProps> = ({ 
     onNavigate, 
     activeHardware = [], 
@@ -34,24 +54,19 @@ export const SettingsAppPage: React.FC<SettingsAppPageProps> = ({
 }) => {
   const { outlets, selectedOutlet, setSelectedOutletId, updateOutletModules, addOutlet, deleteOutlet, deleteBrand, updateOutlet } = useSibos();
   
-  // GLOBAL TABS (Main Navigation Sidebar)
-  const [globalTab, setGlobalTab] = useState<'operational' | 'billing' | 'security'>('operational');
+  // GLOBAL TABS
+  const [globalTab, setGlobalTab] = useState<'operational' | 'profile' | 'billing'>('operational');
 
   // --- LOCAL STATES FOR BRAND & OUTLET LOGIC ---
-  
-  // 1. Extract Unique Brands (Memoized)
   const brands = useMemo(() => {
       const unique = Array.from(new Set(outlets.map(o => o.brand)));
       return unique;
   }, [outlets]);
 
-  // 2. Selected Brand State
   const [selectedBrand, setSelectedBrand] = useState<string>('');
 
-  // SAFETY SYNC: Update selectedBrand if outlets change (e.g., deletion)
   useEffect(() => {
       if (brands.length > 0) {
-          // If currently selected brand no longer exists (deleted), or none selected yet
           if (!selectedBrand || !brands.includes(selectedBrand)) {
               setSelectedBrand(brands[0]);
           }
@@ -60,36 +75,50 @@ export const SettingsAppPage: React.FC<SettingsAppPageProps> = ({
       }
   }, [brands, selectedBrand, outlets]); 
 
-  // 3. Filter Outlets based on Selected Brand
   const brandOutlets = useMemo(() => {
       if (!selectedBrand) return [];
       return outlets.filter(o => o.brand === selectedBrand);
   }, [outlets, selectedBrand]);
 
-  // 4. Active Outlet Tab State
   const [activeOutletTabId, setActiveOutletTabId] = useState<number>(0);
 
-  // SAFETY SYNC: Update active outlet tab if filtered outlets change
   useEffect(() => {
       if (brandOutlets.length > 0) {
-          // Check if currently selected tab ID still exists in the filtered list
           const currentExists = brandOutlets.find(o => o.id === activeOutletTabId);
-          
-          if (!currentExists) {
-              // If not, switch to the first available one in this brand
-              setActiveOutletTabId(brandOutlets[0].id);
-          }
+          if (!currentExists) setActiveOutletTabId(brandOutlets[0].id);
       } else {
           setActiveOutletTabId(0);
       }
   }, [brandOutlets, activeOutletTabId, outlets]); 
 
-  // Get Data safely
-  const activeOutletData = outlets.find(o => o.id === activeOutletTabId);
+  const activeOutletData = outlets.find(o => o.id === activeOutletTabId) || (brandOutlets.length > 0 ? brandOutlets[0] : undefined);
 
-  // Inner Outlet Config Section Tab
-  const [configTab, setConfigTab] = useState<'profile' | 'schedule' | 'payments' | 'features' | 'hardware' | 'receipt' | 'users'>('profile');
-  
+  // Tab Configuration for Outlet Level
+  const [configTab, setConfigTab] = useState<'info' | 'schedule' | 'payments' | 'features' | 'hardware' | 'receipt'>('info');
+  const tabsContainerRef = useRef<HTMLDivElement>(null);
+
+  // Auto-center selected tab on mobile
+  useEffect(() => {
+    if (tabsContainerRef.current) {
+        const activeTabElement = document.getElementById(`config-tab-${configTab}`);
+        if (activeTabElement) {
+            const container = tabsContainerRef.current;
+            const scrollLeft = activeTabElement.offsetLeft - (container.offsetWidth / 2) + (activeTabElement.offsetWidth / 2);
+            container.scrollTo({ left: scrollLeft, behavior: 'smooth' });
+        }
+    }
+  }, [configTab]);
+
+  // --- USER PROFILE STATE ---
+  const [userProfile, setUserProfile] = useState({
+      name: 'Amin Maghfuri',
+      email: 'owner@sibos.id',
+      phone: '081234567890',
+      role: 'Owner (Pemilik)',
+      password: '',
+      newPassword: ''
+  });
+
   // --- ADD MODALS STATE ---
   const [showAddBrandModal, setShowAddBrandModal] = useState(false);
   const [showAddBranchModal, setShowAddBranchModal] = useState(false);
@@ -99,20 +128,19 @@ export const SettingsAppPage: React.FC<SettingsAppPageProps> = ({
   const [newBranchLocation, setNewBranchLocation] = useState('');
   const [newBranchAddress, setNewBranchAddress] = useState('');
 
-  // --- HANDLERS ---
+  // Bulk Schedule State
+  const [bulkOpenTime, setBulkOpenTime] = useState('08:00');
+  const [bulkCloseTime, setBulkCloseTime] = useState('22:00');
 
+  // --- HANDLERS (Same as before) ---
   const handleCreateBrand = () => {
       if (!newBrandName) return;
       
       let defaultModules: string[] = [];
       if (newBrandCategory === 'fnb') defaultModules = ['pos_fnb', 'production'];
       else if (newBrandCategory === 'retail') defaultModules = ['pos_retail'];
-      else if (newBrandCategory === 'service') defaultModules = ['pos_retail', 'booking'];
-      else if (newBrandCategory === 'hospitality') defaultModules = ['pos_retail', 'booking'];
-      else if (newBrandCategory === 'manufacturing') defaultModules = ['pos_retail', 'production'];
       else defaultModules = ['pos_retail'];
 
-      // Activate Global License if not present
       defaultModules.forEach(mod => {
           if (!activeModules.includes(mod as AppModule)) {
               onToggleModule(mod as AppModule);
@@ -128,7 +156,8 @@ export const SettingsAppPage: React.FC<SettingsAppPageProps> = ({
           type: 'Pusat',
           address: 'Alamat belum diatur',
           phone: '-',
-          assignedModules: defaultModules
+          assignedModules: defaultModules,
+          allowDebt: true
       };
 
       addOutlet(newOutlet);
@@ -151,7 +180,8 @@ export const SettingsAppPage: React.FC<SettingsAppPageProps> = ({
           type: 'Cabang',
           address: newBranchAddress || 'Alamat belum diatur',
           phone: '-',
-          assignedModules: parent.assignedModules
+          assignedModules: parent.assignedModules,
+          allowDebt: parent.allowDebt
       };
 
       addOutlet(newOutlet);
@@ -161,18 +191,16 @@ export const SettingsAppPage: React.FC<SettingsAppPageProps> = ({
   };
 
   const handleRemoveBranch = (id: number) => {
-      if (window.confirm('Yakin ingin menghapus cabang ini? Data transaksi terkait mungkin akan terpengaruh.')) {
+      if (window.confirm('Yakin ingin menghapus cabang ini?')) {
           deleteOutlet(id);
       }
   };
 
   const handleRemoveBrand = () => {
-      if (window.confirm(`PERINGATAN: Anda akan menghapus brand "${selectedBrand}" beserta SELURUH cabang di dalamnya.\n\nTindakan ini tidak dapat dibatalkan. Lanjutkan?`)) {
+      if (window.confirm(`PERINGATAN: Hapus brand "${selectedBrand}"?`)) {
           deleteBrand(selectedBrand);
       }
   };
-
-  // --- PERSISTED DATA HANDLERS ---
 
   const toggleDay = (idx: number) => {
       if (!activeOutletData?.schedule) return;
@@ -188,6 +216,17 @@ export const SettingsAppPage: React.FC<SettingsAppPageProps> = ({
       updateOutlet(activeOutletData.id, { schedule: newSchedule });
   };
 
+  const applyBulkSchedule = (target: 'all' | 'weekdays') => {
+      if (!activeOutletData?.schedule) return;
+      const newSchedule = activeOutletData.schedule.map(s => {
+          if (target === 'weekdays') {
+              if (s.day === 'Sabtu' || s.day === 'Minggu') return s;
+          }
+          return { ...s, active: true, open: bulkOpenTime, close: bulkCloseTime };
+      });
+      updateOutlet(activeOutletData.id, { schedule: newSchedule });
+  };
+
   const togglePayment = (id: string) => {
       if (!activeOutletData?.paymentMethods) return;
       const newPayments = activeOutletData.paymentMethods.map(p => 
@@ -196,124 +235,109 @@ export const SettingsAppPage: React.FC<SettingsAppPageProps> = ({
       updateOutlet(activeOutletData.id, { paymentMethods: newPayments });
   };
 
-  // --- DYNAMIC ROLE CONFIGURATION STATE ---
-  const [outletRoles, setOutletRoles] = useState([
-      { id: 'mgr', name: 'Store Manager', level: 'high' },
-      { id: 'spv', name: 'Supervisor', level: 'high' },
-      { id: 'csh', name: 'Cashier', level: 'mid' },
-      { id: 'wtr', name: 'Waiter', level: 'low' },
-      { id: 'ktc', name: 'Kitchen', level: 'low' }
+  const [outletRoles, setOutletRoles] = useState<RoleConfig[]>([
+      { id: 'mgr', name: 'Store Manager', permissions: AVAILABLE_PERMISSIONS }, 
+      { id: 'spv', name: 'Supervisor', permissions: ['Void Transaksi', 'Diskon Manual', 'Tutup Kasir (Closing)', 'Refund / Retur', 'Edit Stok'] },
+      { id: 'csh', name: 'Cashier', permissions: ['Tutup Kasir (Closing)'] },
+      { id: 'wtr', name: 'Waiter', permissions: [] },
   ]);
-  const [selectedRoleConfigId, setSelectedRoleConfigId] = useState('csh');
+  const [expandedRoleId, setExpandedRoleId] = useState<string | null>('csh'); 
   const [newRoleName, setNewRoleName] = useState('');
-  const [newRoleLevel, setNewRoleLevel] = useState('low');
 
   const handleAddRole = () => {
       if (!newRoleName) return;
       const newId = newRoleName.toLowerCase().replace(/\s/g, '_') + Math.floor(Math.random() * 1000);
-      setOutletRoles([...outletRoles, { id: newId, name: newRoleName, level: newRoleLevel }]);
+      setOutletRoles([...outletRoles, { id: newId, name: newRoleName, permissions: [] }]);
       setNewRoleName('');
-      setSelectedRoleConfigId(newId);
+      setExpandedRoleId(newId);
   };
 
   const handleDeleteRole = (id: string) => {
-      setOutletRoles(outletRoles.filter(r => r.id !== id));
-      if (selectedRoleConfigId === id) setSelectedRoleConfigId(outletRoles[0].id);
+      if (window.confirm('Hapus jabatan ini?')) {
+          setOutletRoles(outletRoles.filter(r => r.id !== id));
+          if (expandedRoleId === id) setExpandedRoleId(null);
+      }
   };
 
-  const activeRole = outletRoles.find(r => r.id === selectedRoleConfigId) || outletRoles[0];
+  const togglePermission = (roleId: string, perm: string) => {
+      setOutletRoles(prev => prev.map(r => {
+          if (r.id === roleId) {
+              const hasPerm = r.permissions.includes(perm);
+              const newPerms = hasPerm ? r.permissions.filter(p => p !== perm) : [...r.permissions, perm];
+              return { ...r, permissions: newPerms };
+          }
+          return r;
+      }));
+  };
 
-  const availableGlobalModules: AppModule[] = ['pos_retail', 'pos_fnb', 'booking', 'production', 'crm', 'accounting'];
-
-  // Default fallbacks for display
   const displaySchedule = activeOutletData?.schedule || [];
   const displayPayments = activeOutletData?.paymentMethods || [];
 
   return (
     <BackofficeLayout
-        title="Pengaturan Pusat"
+        title="Pengaturan"
         icon={<Settings className="text-gray-400" size={20} />}
         onNavigate={onNavigate}
-        hideSidebar={true}
-        actions={
-            <button className="flex items-center gap-2 px-6 py-2 bg-sibos-orange hover:bg-orange-600 rounded-lg text-sm font-bold shadow-lg shadow-orange-900/40">
+        activeHardware={activeHardware}
+        activeModules={activeModules}
+        currentPage="settings-app" 
+    >
+      <div className="container mx-auto px-4 py-8 max-w-7xl pb-32 md:pb-24">
+         
+         {/* Top Actions */}
+         <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+            <button onClick={() => onNavigate('backoffice')} className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors font-bold text-sm bg-white/5 w-fit px-4 py-2 rounded-lg hover:bg-white/10">
+                <ArrowLeft size={18} /> Kembali ke Dashboard
+            </button>
+            <button className="flex w-full md:w-auto items-center justify-center gap-2 px-6 py-2 bg-gradient-to-r from-sibos-orange to-red-600 hover:from-orange-500 hover:to-red-500 rounded-lg text-sm font-bold text-white shadow-lg shadow-orange-900/40 active:scale-95 transition-transform">
                <Save size={16} /> Simpan Perubahan
             </button>
-        }
-    >
-      <div className="container mx-auto px-4 py-8 max-w-7xl pb-24">
-         
-         {/* --- MODAL: ADD BRAND --- */}
+         </div>
+
+         {/* --- MODALS --- */}
          {showAddBrandModal && (
              <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in">
                  <div className="bg-slate-900 border border-white/10 rounded-2xl w-full max-w-md p-6 shadow-2xl">
                      <h3 className="text-xl font-bold text-white mb-4">Buat Unit Bisnis Baru</h3>
                      <div className="space-y-4">
                          <div>
-                             <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Nama Brand / Usaha</label>
-                             <input 
-                                type="text" 
-                                value={newBrandName}
-                                onChange={e => setNewBrandName(e.target.value)}
-                                placeholder="Contoh: Senja Clothing" 
-                                className="w-full bg-black border border-white/10 rounded-lg p-3 text-white focus:border-sibos-orange outline-none"
-                             />
+                             <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Nama Brand</label>
+                             <input type="text" value={newBrandName} onChange={e => setNewBrandName(e.target.value)} placeholder="Contoh: Senja Clothing" className="w-full bg-black border border-white/10 rounded-lg p-3 text-white focus:border-sibos-orange outline-none"/>
                          </div>
                          <div>
-                             <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Kategori Bisnis</label>
-                             <select 
-                                value={newBrandCategory}
-                                onChange={e => setNewBrandCategory(e.target.value as BusinessCategory)}
-                                className="w-full bg-black border border-white/10 rounded-lg p-3 text-white focus:border-sibos-orange outline-none"
-                             >
+                             <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Kategori</label>
+                             <select value={newBrandCategory} onChange={e => setNewBrandCategory(e.target.value as BusinessCategory)} className="w-full bg-black border border-white/10 rounded-lg p-3 text-white focus:border-sibos-orange outline-none">
                                  <option value="retail">Ritel (Toko)</option>
                                  <option value="fnb">F&B (Resto/Kafe)</option>
                                  <option value="service">Jasa</option>
-                                 <option value="hospitality">Hospitality</option>
                                  <option value="manufacturing">Manufaktur</option>
                              </select>
                          </div>
                          <div className="pt-4 flex gap-3">
                              <button onClick={() => setShowAddBrandModal(false)} className="flex-1 py-3 bg-slate-800 rounded-xl text-white font-bold hover:bg-slate-700">Batal</button>
-                             <button onClick={handleCreateBrand} className="flex-1 py-3 bg-sibos-orange rounded-xl text-white font-bold hover:bg-orange-600">Simpan</button>
+                             <button onClick={handleCreateBrand} className="flex-1 py-3 bg-gradient-to-r from-sibos-orange to-red-600 hover:from-orange-500 hover:to-red-500 rounded-xl text-white font-bold shadow-lg">Simpan</button>
                          </div>
                      </div>
                  </div>
              </div>
          )}
 
-         {/* --- MODAL: ADD BRANCH --- */}
          {showAddBranchModal && (
              <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in">
                  <div className="bg-slate-900 border border-white/10 rounded-2xl w-full max-w-md p-6 shadow-2xl">
                      <h3 className="text-xl font-bold text-white mb-4">Tambah Cabang Baru</h3>
-                     <div className="text-xs text-gray-400 mb-4">
-                         Menambahkan cabang untuk brand: <strong className="text-white">{selectedBrand}</strong>
-                     </div>
                      <div className="space-y-4">
                          <div>
                              <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Nama Lokasi</label>
-                             <input 
-                                type="text" 
-                                value={newBranchLocation}
-                                onChange={e => setNewBranchLocation(e.target.value)}
-                                placeholder="Contoh: Cabang Jakarta Selatan" 
-                                className="w-full bg-black border border-white/10 rounded-lg p-3 text-white focus:border-sibos-orange outline-none"
-                             />
+                             <input type="text" value={newBranchLocation} onChange={e => setNewBranchLocation(e.target.value)} placeholder="Contoh: Cabang Selatan" className="w-full bg-black border border-white/10 rounded-lg p-3 text-white focus:border-sibos-orange outline-none"/>
                          </div>
                          <div>
                              <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Alamat</label>
-                             <textarea 
-                                value={newBranchAddress}
-                                onChange={e => setNewBranchAddress(e.target.value)}
-                                rows={3}
-                                placeholder="Alamat lengkap..." 
-                                className="w-full bg-black border border-white/10 rounded-lg p-3 text-white focus:border-sibos-orange outline-none resize-none"
-                             />
+                             <textarea value={newBranchAddress} onChange={e => setNewBranchAddress(e.target.value)} rows={3} className="w-full bg-black border border-white/10 rounded-lg p-3 text-white focus:border-sibos-orange outline-none resize-none"/>
                          </div>
                          <div className="pt-4 flex gap-3">
                              <button onClick={() => setShowAddBranchModal(false)} className="flex-1 py-3 bg-slate-800 rounded-xl text-white font-bold hover:bg-slate-700">Batal</button>
-                             <button onClick={handleCreateBranch} className="flex-1 py-3 bg-sibos-orange rounded-xl text-white font-bold hover:bg-orange-600">Simpan</button>
+                             <button onClick={handleCreateBranch} className="flex-1 py-3 bg-gradient-to-r from-sibos-orange to-red-600 hover:from-orange-500 hover:to-red-500 rounded-xl text-white font-bold shadow-lg">Simpan</button>
                          </div>
                      </div>
                  </div>
@@ -322,63 +346,52 @@ export const SettingsAppPage: React.FC<SettingsAppPageProps> = ({
 
          <div className="flex flex-col lg:flex-row gap-8">
             
-            {/* === SIDEBAR: DAFTAR UNIT BISNIS (BRAND) === */}
+            {/* === SIDEBAR: MENU PENGATURAN === */}
             <div className="w-full lg:w-64 space-y-6 flex-shrink-0">
                 
-                {/* Operational (Brands) */}
+                {/* 1. SETUP TOKO (OPERASIONAL) */}
                 <div>
-                    <div className="px-4 mb-3 flex items-center justify-between">
-                        <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider">Unit Bisnis (Brand)</h3>
-                        <button 
-                            onClick={() => setShowAddBrandModal(true)}
-                            className="p-1 hover:bg-white/10 rounded text-blue-400 transition-colors" 
-                            title="Buat Brand Baru"
-                        >
-                            <Plus size={16}/>
-                        </button>
+                    <div className="px-1 mb-3 flex items-center justify-between">
+                        <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider">Setup Toko</h3>
                     </div>
-                    
-                    <div className="space-y-1">
+                    <div className="space-y-2">
                         {brands.map((brand) => (
                             <button 
                                 key={brand}
-                                onClick={() => {
-                                    setSelectedBrand(brand);
-                                    setGlobalTab('operational');
-                                }}
-                                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all text-left ${
-                                    selectedBrand === brand && globalTab === 'operational'
-                                    ? 'bg-white/10 text-white border border-white/5 shadow-lg' 
-                                    : 'text-gray-400 hover:bg-white/5 hover:text-white border border-transparent'
-                                }`}
+                                onClick={() => { setSelectedBrand(brand); setGlobalTab('operational'); }}
+                                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all text-left ${selectedBrand === brand && globalTab === 'operational' ? 'bg-white/10 text-white border border-white/5 shadow-lg' : 'bg-slate-900 lg:bg-transparent text-gray-400 hover:bg-orange-500/10 hover:text-sibos-orange border border-white/5 lg:border-transparent'}`}
                             >
-                                <Briefcase size={18} className={selectedBrand === brand && globalTab === 'operational' ? 'text-sibos-orange' : 'text-gray-500'} />
-                                <span className="truncate">{brand}</span>
-                                {selectedBrand === brand && globalTab === 'operational' && <ChevronRight size={14} className="ml-auto text-gray-500"/>}
+                                <Store size={18} className={selectedBrand === brand ? 'text-sibos-orange' : 'text-gray-500'} />
+                                <span className="truncate flex-1">{brand}</span>
+                                {selectedBrand === brand && <ChevronRight size={14} className="ml-auto text-gray-500 hidden lg:block"/>}
                             </button>
                         ))}
                     </div>
+                    <button onClick={() => setShowAddBrandModal(true)} className="w-full mt-4 flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-dashed border-white/20 text-gray-400 hover:text-sibos-orange hover:bg-orange-500/10 hover:border-sibos-orange transition-all group">
+                        <Plus size={18} className="text-gray-500 group-hover:text-sibos-orange"/>
+                        <span className="text-sm font-bold">Buat Brand Baru</span>
+                    </button>
                 </div>
 
-                {/* Global Settings */}
+                {/* 2. AKUN & USER */}
                 <div className="border-t border-white/5 pt-6">
-                    <h3 className="px-4 text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Admin Pusat</h3>
+                    <h3 className="px-1 text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Akun Saya</h3>
                     <div className="space-y-1">
                         <button 
-                            onClick={() => setGlobalTab('billing')}
-                            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all text-left ${
-                                globalTab === 'billing' ? 'bg-green-600 text-white shadow-lg shadow-green-900/30' : 'text-gray-400 hover:bg-white/5 hover:text-white'
-                            }`}
+                            onClick={() => setGlobalTab('profile')} 
+                            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all text-left ${globalTab === 'profile' ? 'bg-sibos-orange text-white shadow-lg' : 'bg-slate-900 lg:bg-transparent text-gray-400 hover:bg-orange-500/10 hover:text-sibos-orange border border-white/5 lg:border-transparent'}`}
                         >
-                            <CreditCard size={18} /> Billing & Lisensi
+                            <User size={18} /> Profil Akun
                         </button>
-                        <button 
-                            onClick={() => setGlobalTab('security')}
-                            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all text-left ${
-                                globalTab === 'security' ? 'bg-slate-700 text-white' : 'text-gray-400 hover:bg-white/5 hover:text-white'
-                            }`}
-                        >
-                            <Shield size={18} /> Keamanan
+                    </div>
+                </div>
+
+                {/* 3. BILLING */}
+                <div className="border-t border-white/5 pt-6 hidden lg:block">
+                    <h3 className="px-1 text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Admin Pusat</h3>
+                    <div className="space-y-1">
+                        <button onClick={() => setGlobalTab('billing')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all text-left ${globalTab === 'billing' ? 'bg-green-600 text-white shadow-lg' : 'text-gray-400 hover:bg-white/5'}`}>
+                            <CreditCard size={18} /> Billing & Lisensi
                         </button>
                     </div>
                 </div>
@@ -387,270 +400,193 @@ export const SettingsAppPage: React.FC<SettingsAppPageProps> = ({
             {/* === MAIN CONTENT AREA === */}
             <div className="flex-1 min-w-0 space-y-6">
                 
-                {/* 1. OPERATIONAL VIEW (BRAND & BRANCHES) */}
+                {/* === TAB: OPERATIONAL (BRAND & OUTLET SETUP) === */}
                 {globalTab === 'operational' && (
                     <>
                         {selectedBrand && brandOutlets.length > 0 ? (
                             <>
-                            {/* A. GLOBAL BRAND IDENTITY (Top Panel) */}
+                            {/* BRAND IDENTITY */}
                             <GlassCard className="bg-slate-900 border-white/10 relative overflow-hidden">
-                                <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
-                                    <Store size={150} />
-                                </div>
-                                
+                                <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none"><Briefcase size={150} /></div>
                                 <div className="flex flex-col md:flex-row gap-8 items-start relative z-10">
-                                    {/* Brand Logo */}
-                                    <div className="flex-shrink-0">
-                                        <div className="w-24 h-24 bg-slate-800 rounded-2xl border-2 border-dashed border-white/20 flex flex-col items-center justify-center text-gray-500 hover:border-sibos-orange hover:text-sibos-orange transition-colors cursor-pointer group relative overflow-hidden shadow-xl">
+                                    <div className="flex-shrink-0 flex items-center gap-4 md:block">
+                                        <div className="w-20 h-20 md:w-24 md:h-24 bg-slate-800 rounded-2xl border-2 border-dashed border-white/20 flex flex-col items-center justify-center text-gray-500 hover:border-sibos-orange hover:text-sibos-orange transition-colors cursor-pointer group relative overflow-hidden shadow-xl">
                                             <ImageIcon size={28} className="mb-1" />
-                                            <span className="text-[10px] font-bold text-center px-2">Logo Brand</span>
-                                            <div className="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                                <Upload size={20} className="text-white" />
-                                            </div>
+                                            <span className="text-[10px] font-bold text-center px-2 hidden md:block">Logo Brand</span>
                                         </div>
-                                        <div className="text-[10px] text-gray-500 text-center mt-2">Identitas Global</div>
                                     </div>
-
-                                    {/* Brand Info Form */}
                                     <div className="flex-1 w-full">
                                         <div className="flex justify-between items-start mb-4">
                                             <div>
                                                 <h2 className="text-xl font-bold text-white">Identitas Unit Bisnis</h2>
-                                                <p className="text-xs text-gray-400">Pengaturan ini berlaku untuk branding utama usaha.</p>
+                                                <p className="text-xs text-gray-400">Pengaturan ini berlaku global untuk brand ini.</p>
                                             </div>
-                                            <div className="flex gap-2">
-                                                <div className="px-3 py-1 bg-blue-500/10 text-blue-400 rounded-full text-xs font-bold border border-blue-500/20">
-                                                    {brandOutlets.length} Cabang
-                                                </div>
-                                                <button onClick={handleRemoveBrand} className="px-3 py-1 bg-red-500/10 text-red-400 rounded-full text-xs font-bold border border-red-500/20 hover:bg-red-500/20 transition-colors">
-                                                    Hapus Brand
-                                                </button>
-                                            </div>
+                                            <button onClick={handleRemoveBrand} className="flex items-center gap-2 px-4 py-2 bg-red-900/10 text-red-500 rounded-lg text-xs font-bold border border-red-500/20 hover:bg-red-500 hover:text-white transition-all shadow-lg group">
+                                                <Trash2 size={16} /> <span className="hidden md:inline">Hapus Brand</span>
+                                            </button>
                                         </div>
-                                        
-                                        <div className="grid md:grid-cols-2 gap-4">
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                             <div>
-                                                <label className="text-xs text-gray-400 font-bold uppercase mb-1 block">Nama Brand / Usaha</label>
+                                                <label className="text-xs text-gray-400 font-bold uppercase mb-1 block">Nama Brand</label>
                                                 <input type="text" value={selectedBrand} onChange={(e) => setSelectedBrand(e.target.value)} className="w-full bg-slate-950 border border-white/10 rounded-lg p-2.5 text-sm text-white focus:border-sibos-orange outline-none font-bold" />
                                             </div>
                                             <div>
-                                                <label className="text-xs text-gray-400 font-bold uppercase mb-1 block">Kategori Utama</label>
+                                                <label className="text-xs text-gray-400 font-bold uppercase mb-1 block">Kategori</label>
                                                 <select className="w-full bg-slate-950 border border-white/10 rounded-lg p-2.5 text-sm text-white focus:border-sibos-orange outline-none appearance-none">
-                                                    <option value="fnb">F&B (Restoran/Kafe)</option>
-                                                    <option value="retail">Retail (Toko/Minimarket)</option>
-                                                    <option value="service">Jasa & Layanan</option>
-                                                    <option value="hospitality">Hospitality</option>
-                                                    <option value="manufacturing">Manufaktur</option>
+                                                    <option value="fnb">F&B</option>
+                                                    <option value="retail">Retail</option>
                                                 </select>
                                             </div>
                                             <div>
-                                                <label className="text-xs text-gray-400 font-bold uppercase mb-1 flex items-center gap-1"><FileText size={12}/> NPWP Brand (Tax ID)</label>
-                                                <input type="text" placeholder="00.000.000.0-000.000" className="w-full bg-slate-950 border border-white/10 rounded-lg p-2.5 text-sm text-white focus:border-sibos-orange outline-none" />
+                                                <label className="text-xs text-gray-400 font-bold uppercase mb-1 flex items-center gap-1"><FileText size={12}/> NPWP</label>
+                                                <input type="text" defaultValue={activeOutletData?.npwp || ''} placeholder="00.000.000.0-000.000" className="w-full bg-slate-950 border border-white/10 rounded-lg p-2.5 text-sm text-white focus:border-sibos-orange outline-none" />
                                             </div>
                                             <div>
-                                                <label className="text-xs text-gray-400 font-bold uppercase mb-1 block">Slogan / Tagline</label>
-                                                <input type="text" placeholder="Contoh: Nikmatnya Kopi Asli" className="w-full bg-slate-950 border border-white/10 rounded-lg p-2.5 text-sm text-white focus:border-sibos-orange outline-none" />
+                                                <label className="text-xs text-gray-400 font-bold uppercase mb-1 block">Slogan</label>
+                                                <input type="text" defaultValue={activeOutletData?.slogan || ''} placeholder="Contoh: Nikmatnya Kopi Asli" className="w-full bg-slate-950 border border-white/10 rounded-lg p-2.5 text-sm text-white focus:border-sibos-orange outline-none" />
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                             </GlassCard>
 
-                            {/* B. BRANCH MANAGEMENT (Bottom Panel) */}
-                            <div className="bg-slate-900 rounded-2xl border border-white/5 overflow-hidden flex flex-col min-h-[600px]">
-                                
-                                {/* Branch Selector Tabs (Horizontal) */}
-                                <div className="flex items-center bg-slate-950 border-b border-white/5 px-2 overflow-x-auto no-scrollbar">
-                                    <div className="px-4 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider flex-shrink-0 flex items-center gap-2 border-r border-white/5 mr-2">
-                                        <Building2 size={14} /> Pilih Cabang:
+                            {/* ROLE CONFIG */}
+                            <div className="bg-slate-900 border border-white/10 rounded-2xl p-6 mt-6">
+                                <div className="flex justify-between items-start mb-6">
+                                    <div>
+                                        <h2 className="text-xl font-bold text-white">Struktur Jabatan (Role)</h2>
+                                        <p className="text-xs text-gray-400">Atur hak akses untuk setiap jabatan.</p>
                                     </div>
+                                </div>
+                                <div className="space-y-3">
+                                    {outletRoles.map((role) => {
+                                        const isExpanded = expandedRoleId === role.id;
+                                        return (
+                                            <div key={role.id} className={`rounded-xl border transition-all duration-300 overflow-hidden ${isExpanded ? 'bg-slate-950 border-orange-500/50 shadow-lg' : 'bg-slate-950 border-white/5 hover:border-white/20'}`}>
+                                                <div onClick={() => setExpandedRoleId(isExpanded ? null : role.id)} className="flex items-center justify-between p-4 cursor-pointer hover:bg-white/5 transition-colors">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold border ${isExpanded ? 'bg-orange-600 text-white border-orange-500' : 'bg-slate-800 text-gray-400 border-white/10'}`}>{role.name.charAt(0)}</div>
+                                                        <div>
+                                                            <div className={`font-bold text-sm ${isExpanded ? 'text-white' : 'text-gray-300'}`}>{role.name}</div>
+                                                            <div className="text-[10px] text-gray-500 uppercase">{role.permissions.length} Permissions</div>
+                                                        </div>
+                                                    </div>
+                                                    <div className="flex items-center gap-2">
+                                                        <button onClick={(e) => { e.stopPropagation(); handleDeleteRole(role.id); }} className="p-2 hover:bg-red-500/10 hover:text-red-500 text-gray-600 rounded-lg transition-colors"><Trash2 size={16} /></button>
+                                                        <ChevronDown size={18} className={`text-gray-500 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`} />
+                                                    </div>
+                                                </div>
+                                                {isExpanded && (
+                                                    <div className="p-4 border-t border-white/5 bg-black/20 animate-in slide-in-from-top-2">
+                                                        <div className="mb-4">
+                                                            <label className="text-[10px] font-bold text-gray-500 uppercase mb-2 block">Nama Jabatan</label>
+                                                            <input type="text" value={role.name} onChange={(e) => { const newName = e.target.value; setOutletRoles(prev => prev.map(r => r.id === role.id ? {...r, name: newName} : r)); }} className="w-full bg-slate-900 border border-white/10 rounded-lg p-2 text-sm text-white focus:border-purple-500 outline-none" />
+                                                        </div>
+                                                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                                                            {AVAILABLE_PERMISSIONS.map((perm, i) => {
+                                                                const isChecked = role.permissions.includes(perm);
+                                                                return (
+                                                                    <div key={i} onClick={() => togglePermission(role.id, perm)} className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all ${isChecked ? 'bg-orange-500/10 border-orange-500/30' : 'bg-slate-900 border-white/5 opacity-60 hover:opacity-100'}`}>
+                                                                        <div className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${isChecked ? 'bg-sibos-orange border-sibos-orange' : 'border-gray-600'}`}>{isChecked && <Check size={10} className="text-white" />}</div>
+                                                                        <span className={`text-xs ${isChecked ? 'text-white font-medium' : 'text-gray-400'}`}>{perm}</span>
+                                                                    </div>
+                                                                );
+                                                            })}
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                                <div className="mt-4 pt-4 border-t border-white/5 flex gap-2">
+                                    <input type="text" value={newRoleName} onChange={(e) => setNewRoleName(e.target.value)} placeholder="Jabatan Baru..." className="flex-1 bg-slate-950 border border-white/10 rounded-lg p-2.5 text-sm text-white focus:border-sibos-orange outline-none"/>
+                                    <button onClick={handleAddRole} className="px-4 bg-sibos-orange hover:bg-orange-500 text-white rounded-lg text-sm font-bold flex items-center gap-2"><Plus size={16} /> Tambah</button>
+                                </div>
+                            </div>
+
+                            {/* BRANCH MANAGEMENT */}
+                            <div className="bg-slate-900 rounded-2xl border border-white/5 overflow-hidden flex flex-col min-h-[600px] mt-6">
+                                <div className="flex items-center bg-slate-950 border-b border-white/5 px-2 overflow-x-auto no-scrollbar">
+                                    <div className="px-4 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider flex-shrink-0 border-r border-white/5 mr-2">Pilih Cabang:</div>
                                     {brandOutlets.map(outlet => (
-                                        <button
-                                            key={outlet.id}
-                                            onClick={() => setActiveOutletTabId(outlet.id)}
-                                            className={`
-                                                flex items-center gap-2 px-5 py-4 text-sm font-bold border-b-2 transition-colors whitespace-nowrap relative group
-                                                ${activeOutletTabId === outlet.id ? 'border-blue-500 text-white bg-white/5' : 'border-transparent text-gray-500 hover:text-gray-300'}
-                                            `}
-                                        >
-                                            {outlet.type === 'Pusat' && <Store size={12} className="text-yellow-500"/>}
-                                            {outlet.location || outlet.name}
-                                            {/* Set Active Context Button */}
-                                            {selectedOutlet.id !== outlet.id && activeOutletTabId === outlet.id && (
-                                                <span 
-                                                    onClick={(e) => { e.stopPropagation(); setSelectedOutletId(outlet.id); }}
-                                                    title="Set sebagai Outlet Aktif di Backoffice"
-                                                    className="ml-2 p-1 bg-slate-800 rounded-full text-gray-500 hover:text-green-400 hover:bg-slate-700"
-                                                >
-                                                    <CheckCircle size={12} />
-                                                </span>
-                                            )}
-                                        </button>
+                                        <button key={outlet.id} onClick={() => setActiveOutletTabId(outlet.id)} className={`flex items-center gap-2 px-5 py-4 text-sm font-bold border-b-2 transition-colors whitespace-nowrap flex-shrink-0 ${activeOutletTabId === outlet.id ? 'border-sibos-orange text-white bg-white/5' : 'border-transparent text-gray-500'}`}>{outlet.location || outlet.name}</button>
                                     ))}
-                                    <button 
-                                        onClick={() => setShowAddBranchModal(true)}
-                                        className="flex items-center gap-1 px-5 py-4 text-sm font-bold text-blue-500 hover:text-white transition-colors whitespace-nowrap ml-auto"
-                                    >
-                                        <Plus size={14} /> Tambah
-                                    </button>
+                                    <button onClick={() => setShowAddBranchModal(true)} className="ml-auto flex-shrink-0 flex items-center gap-2 px-5 py-2 my-2 mr-2 bg-sibos-orange hover:bg-orange-500 text-white rounded-lg text-xs font-bold shadow-lg"><Plus size={14} /> Tambah Cabang</button>
                                 </div>
 
-                                {/* Branch Detail Config */}
                                 {activeOutletData ? (
-                                    <div className="flex flex-col md:flex-row flex-1">
-                                        
-                                        {/* Vertical Menu for Branch Config */}
-                                        <div className="w-full md:w-56 bg-slate-950 border-r border-white/5 p-2">
-                                            <div className="px-3 py-2 mb-2">
-                                                <div className="text-[10px] text-gray-500 font-bold uppercase">Konfigurasi Outlet</div>
-                                                <div className="text-sm font-bold text-white truncate">{activeOutletData.location || activeOutletData.name}</div>
-                                            </div>
+                                    <div className="flex flex-col md:flex-row flex-1 overflow-hidden">
+                                        <div ref={tabsContainerRef} className="w-full md:w-56 bg-slate-950 border-b md:border-b-0 md:border-r border-white/5 p-2 flex md:flex-col overflow-x-auto md:overflow-visible no-scrollbar">
                                             {[
-                                                { id: 'profile', label: 'Alamat & Kontak', icon: MapPin },
-                                                { id: 'schedule', label: 'Jam Operasional', icon: Clock },
-                                                { id: 'payments', label: 'Metode Bayar', icon: Wallet },
-                                                { id: 'features', label: 'Fitur & Modul', icon: LayoutGrid },
-                                                { id: 'users', label: 'Role & Akses', icon: Users },
-                                                { id: 'hardware', label: 'Hardware', icon: Printer },
-                                                { id: 'receipt', label: 'Struk & Pajak', icon: Receipt },
+                                                { id: 'info', label: 'Info Lokasi', icon: MapPin },
+                                                { id: 'schedule', label: 'Jadwal', icon: Clock },
+                                                { id: 'payments', label: 'Bayar', icon: Wallet },
+                                                { id: 'features', label: 'Fitur', icon: LayoutGrid },
+                                                { id: 'hardware', label: 'Alat', icon: Printer },
+                                                { id: 'receipt', label: 'Struk', icon: Receipt },
                                             ].map(tab => (
-                                                <button
-                                                    key={tab.id}
-                                                    onClick={() => setConfigTab(tab.id as any)}
-                                                    className={`w-full flex items-center gap-3 px-3 py-3 rounded-lg text-xs font-bold mb-1 text-left transition-all ${
-                                                        configTab === tab.id ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-white hover:bg-white/5'
-                                                    }`}
-                                                >
-                                                    <tab.icon size={16} /> {tab.label}
-                                                </button>
+                                                <button key={tab.id} id={`config-tab-${tab.id}`} onClick={() => setConfigTab(tab.id as any)} className={`flex-shrink-0 md:w-full flex flex-col md:flex-row items-center md:gap-3 gap-1 px-4 md:px-3 py-3 md:py-3 rounded-lg text-xs font-bold mb-0 md:mb-1 text-center md:text-left transition-all ${configTab === tab.id ? 'bg-sibos-orange text-white' : 'text-gray-400 hover:text-sibos-orange hover:bg-orange-500/10'}`}><tab.icon size={16} /> <span className="whitespace-nowrap">{tab.label}</span></button>
                                             ))}
                                         </div>
 
-                                        {/* Config Content */}
-                                        <div className="flex-1 p-6 bg-slate-900 overflow-y-auto">
-                                            
-                                            {/* 1. ADDRESS & CONTACT */}
-                                            {configTab === 'profile' && (
-                                                <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2">
-                                                    <div className="flex justify-between items-center pb-4 border-b border-white/5">
-                                                        <div>
-                                                            <h3 className="font-bold text-white">Detail Lokasi</h3>
-                                                            <p className="text-xs text-gray-500">Informasi ini akan dicetak pada struk transaksi.</p>
+                                        <div className="flex-1 p-4 md:p-6 bg-slate-900 overflow-y-auto custom-scrollbar h-[500px] md:h-auto pb-24 md:pb-6">
+                                            {configTab === 'info' && (
+                                                <div className="space-y-6">
+                                                    <h3 className="font-bold text-white border-b border-white/5 pb-2">Detail Lokasi</h3>
+                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                        <div className="md:col-span-2">
+                                                            <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Nama Lokasi</label>
+                                                            <input type="text" defaultValue={activeOutletData.location} className="w-full bg-slate-950 border border-white/10 rounded-lg p-3 text-sm text-white focus:border-sibos-orange outline-none" />
                                                         </div>
-                                                        <button 
-                                                            onClick={() => handleRemoveBranch(activeOutletData.id)}
-                                                            className="text-red-400 hover:text-red-300 text-xs flex items-center gap-1 px-3 py-1.5 border border-red-500/30 rounded-lg hover:bg-red-500/10 transition-colors"
-                                                        >
-                                                            <Trash2 size={14} /> Hapus Cabang
-                                                        </button>
-                                                    </div>
-                                                    
-                                                    <div className="grid grid-cols-2 gap-4">
-                                                        <div className="col-span-2">
-                                                            <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Nama Lokasi (Internal)</label>
-                                                            <input type="text" defaultValue={activeOutletData.location} className="w-full bg-slate-950 border border-white/10 rounded-lg p-2.5 text-sm text-white focus:border-blue-500 outline-none" placeholder="Misal: Cabang Mall Paragon"/>
-                                                        </div>
-                                                        <div className="col-span-2">
-                                                            <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Alamat Lengkap</label>
-                                                            <textarea defaultValue={activeOutletData.address} rows={3} className="w-full bg-slate-950 border border-white/10 rounded-lg p-2.5 text-sm text-white focus:border-blue-500 outline-none resize-none" />
+                                                        <div className="md:col-span-2">
+                                                            <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Alamat</label>
+                                                            <textarea defaultValue={activeOutletData.address} rows={3} className="w-full bg-slate-950 border border-white/10 rounded-lg p-3 text-sm text-white focus:border-sibos-orange outline-none resize-none" />
                                                         </div>
                                                         <div>
-                                                            <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Kota / Area</label>
-                                                            <input type="text" defaultValue="Surakarta" className="w-full bg-slate-950 border border-white/10 rounded-lg p-2.5 text-sm text-white focus:border-blue-500 outline-none" />
+                                                            <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Kota</label>
+                                                            <input type="text" defaultValue={activeOutletData.city || "Surakarta"} className="w-full bg-slate-950 border border-white/10 rounded-lg p-3 text-sm text-white focus:border-sibos-orange outline-none" />
                                                         </div>
                                                         <div>
-                                                            <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Telepon Outlet</label>
-                                                            <input type="text" defaultValue={activeOutletData.phone} className="w-full bg-slate-950 border border-white/10 rounded-lg p-2.5 text-sm text-white focus:border-blue-500 outline-none" />
-                                                        </div>
-                                                        <div>
-                                                            <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Tipe Outlet</label>
-                                                            <select defaultValue={activeOutletData.type} className="w-full bg-slate-950 border border-white/10 rounded-lg p-2.5 text-sm text-white focus:border-blue-500 outline-none">
-                                                                <option>Pusat</option>
-                                                                <option>Cabang</option>
-                                                                <option>Gudang</option>
-                                                                <option>Pop-up Store</option>
-                                                            </select>
+                                                            <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Telepon</label>
+                                                            <input type="text" defaultValue={activeOutletData.phone} className="w-full bg-slate-950 border border-white/10 rounded-lg p-3 text-sm text-white focus:border-sibos-orange outline-none" />
                                                         </div>
                                                     </div>
+                                                    <button onClick={() => handleRemoveBranch(activeOutletData.id)} className="w-full md:w-auto mt-8 px-6 py-2 bg-red-600 hover:bg-red-500 text-white font-bold rounded-lg text-sm shadow-lg flex items-center justify-center gap-2"><Trash2 size={16} /> Hapus Cabang Ini</button>
                                                 </div>
                                             )}
-
-                                            {/* NEW: STORE HOURS (PERSISTED) */}
                                             {configTab === 'schedule' && (
-                                                <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2">
-                                                    <div className="pb-4 border-b border-white/5">
-                                                        <h3 className="font-bold text-white">Jam Operasional</h3>
-                                                        <p className="text-xs text-gray-500">
-                                                            Tentukan kapan outlet ini buka. Pesanan online akan otomatis ditolak di luar jam ini.
-                                                        </p>
-                                                    </div>
-                                                    
-                                                    <div className="space-y-2">
-                                                        <div className="grid grid-cols-4 gap-4 text-xs font-bold text-gray-500 uppercase px-4 pb-2 border-b border-white/5">
-                                                            <div>Hari</div>
-                                                            <div>Status</div>
-                                                            <div>Buka</div>
-                                                            <div>Tutup</div>
+                                                <div className="space-y-6">
+                                                    <div className="p-4 bg-slate-950 rounded-xl border border-white/10 flex flex-col md:flex-row items-end gap-3">
+                                                        <div className="flex-1 w-full grid grid-cols-2 gap-3">
+                                                            <div><label className="text-[10px] uppercase font-bold text-gray-500 mb-1 block">Buka</label><input type="time" value={bulkOpenTime} onChange={e => setBulkOpenTime(e.target.value)} className="w-full bg-slate-900 border border-white/10 rounded-lg p-2 text-sm text-white" /></div>
+                                                            <div><label className="text-[10px] uppercase font-bold text-gray-500 mb-1 block">Tutup</label><input type="time" value={bulkCloseTime} onChange={e => setBulkCloseTime(e.target.value)} className="w-full bg-slate-900 border border-white/10 rounded-lg p-2 text-sm text-white" /></div>
                                                         </div>
+                                                        <div className="flex gap-2 w-full md:w-auto">
+                                                            <button onClick={() => applyBulkSchedule('all')} className="flex-1 md:flex-none px-3 py-2 bg-orange-600/20 text-sibos-orange hover:bg-sibos-orange hover:text-white rounded-lg text-xs font-bold border border-orange-500/30">Set Semua Hari</button>
+                                                            <button onClick={() => applyBulkSchedule('weekdays')} className="flex-1 md:flex-none px-3 py-2 bg-slate-800 text-gray-300 hover:text-white rounded-lg text-xs font-bold border border-white/10">Set Senin-Jumat</button>
+                                                        </div>
+                                                    </div>
+                                                    <div className="space-y-3">
                                                         {displaySchedule.map((sch, idx) => (
-                                                            <div key={idx} className={`grid grid-cols-4 gap-4 items-center p-3 rounded-lg border ${sch.active ? 'bg-slate-950 border-white/5' : 'bg-slate-950/50 border-transparent opacity-50'}`}>
-                                                                <div className="text-sm font-bold text-white">{sch.day}</div>
-                                                                <div>
-                                                                    <button 
-                                                                        onClick={() => toggleDay(idx)}
-                                                                        className={`px-3 py-1 rounded text-xs font-bold ${sch.active ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}
-                                                                    >
-                                                                        {sch.active ? 'BUKA' : 'TUTUP'}
-                                                                    </button>
-                                                                </div>
-                                                                <input 
-                                                                    type="time" 
-                                                                    value={sch.open}
-                                                                    onChange={(e) => updateScheduleTime(idx, 'open', e.target.value)}
-                                                                    disabled={!sch.active}
-                                                                    className="bg-slate-900 border border-white/10 rounded px-2 py-1 text-sm text-white disabled:opacity-50" 
-                                                                />
-                                                                <input 
-                                                                    type="time" 
-                                                                    value={sch.close}
-                                                                    onChange={(e) => updateScheduleTime(idx, 'close', e.target.value)}
-                                                                    disabled={!sch.active}
-                                                                    className="bg-slate-900 border border-white/10 rounded px-2 py-1 text-sm text-white disabled:opacity-50" 
-                                                                />
+                                                            <div key={idx} className="grid grid-cols-12 gap-3 items-center p-3 rounded-xl border border-white/5 bg-slate-950/50">
+                                                                <div className="col-span-3 md:col-span-2 text-sm font-bold text-white">{sch.day}</div>
+                                                                <div className="col-span-3 md:col-span-2"><button onClick={() => toggleDay(idx)} className={`relative w-12 h-6 rounded-full transition-colors ${sch.active ? 'bg-green-500' : 'bg-slate-700'}`}><div className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform ${sch.active ? 'translate-x-6' : 'translate-x-0'}`}></div></button></div>
+                                                                <div className="col-span-6 md:col-span-8 flex items-center gap-2">{sch.active ? <><input type="time" value={sch.open} onChange={(e) => updateScheduleTime(idx, 'open', e.target.value)} className="bg-slate-900 border border-white/10 rounded-lg px-2 py-1.5 text-sm text-white w-full" /><span className="text-gray-500">-</span><input type="time" value={sch.close} onChange={(e) => updateScheduleTime(idx, 'close', e.target.value)} className="bg-slate-900 border border-white/10 rounded-lg px-2 py-1.5 text-sm text-white w-full" /></> : <span className="text-xs text-gray-500 italic w-full text-center bg-slate-900/50 py-1.5 rounded">Tutup</span>}</div>
                                                             </div>
                                                         ))}
                                                     </div>
                                                 </div>
                                             )}
-
-                                            {/* NEW: PAYMENTS (PERSISTED) */}
                                             {configTab === 'payments' && (
-                                                <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2">
-                                                    <div className="pb-4 border-b border-white/5">
-                                                        <h3 className="font-bold text-white">Metode Pembayaran</h3>
-                                                        <p className="text-xs text-gray-500">
-                                                            Aktifkan opsi pembayaran yang tersedia di outlet <strong>{activeOutletData.location}</strong>.
-                                                        </p>
-                                                    </div>
-
+                                                <div className="space-y-6">
+                                                    <div className="pb-4 border-b border-white/5"><h3 className="font-bold text-white">Metode Pembayaran</h3></div>
                                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                         {displayPayments.map(method => (
-                                                            <div 
-                                                                key={method.id}
-                                                                onClick={() => togglePayment(method.id)}
-                                                                className={`
-                                                                    p-4 rounded-xl border cursor-pointer flex justify-between items-center transition-all
-                                                                    ${method.active ? 'bg-slate-800 border-green-500/30' : 'bg-slate-950 border-white/5 opacity-70'}
-                                                                `}
-                                                            >
+                                                            <div key={method.id} onClick={() => togglePayment(method.id)} className={`p-4 rounded-xl border cursor-pointer flex justify-between items-center transition-all ${method.active ? 'bg-slate-800 border-green-500/30' : 'bg-slate-950 border-white/5 opacity-70'}`}>
                                                                 <div className="flex items-center gap-3">
-                                                                    <div className={`p-2 rounded-lg ${method.active ? 'bg-green-500/20 text-green-400' : 'bg-white/5 text-gray-500'}`}>
-                                                                        <Wallet size={18} />
-                                                                    </div>
-                                                                    <div>
-                                                                        <div className="text-sm font-bold text-white">{method.name}</div>
-                                                                        <div className="text-[10px] text-gray-500">{method.type}</div>
-                                                                    </div>
+                                                                    <div className={`p-2 rounded-lg ${method.active ? 'bg-green-500/20 text-green-400' : 'bg-white/5 text-gray-500'}`}><Wallet size={18} /></div>
+                                                                    <div><div className="text-sm font-bold text-white">{method.name}</div><div className="text-[10px] text-gray-500">{method.type}</div></div>
                                                                 </div>
                                                                 {method.active ? <ToggleRight size={28} className="text-green-500" /> : <ToggleLeft size={28} className="text-gray-600" />}
                                                             </div>
@@ -658,334 +594,123 @@ export const SettingsAppPage: React.FC<SettingsAppPageProps> = ({
                                                     </div>
                                                 </div>
                                             )}
-
-                                            {/* 2. FEATURES / MODULES */}
                                             {configTab === 'features' && (
-                                                <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2">
-                                                    <div className="p-4 bg-indigo-900/20 border border-indigo-500/30 rounded-xl flex gap-3 mb-6">
-                                                        <LayoutGrid className="text-indigo-400 flex-shrink-0" size={20} />
-                                                        <div>
-                                                            <h4 className="font-bold text-indigo-400 text-sm">Konfigurasi Modul Operasional</h4>
-                                                            <p className="text-xs text-gray-400 mt-1">
-                                                                Pilih modul yang aktif untuk <strong>{activeOutletData.location}</strong>. 
-                                                                Hanya modul yang sudah dibeli (Global) yang bisa diaktifkan.
-                                                            </p>
+                                                <div className="space-y-6">
+                                                    <div className="pb-4 border-b border-white/5"><h3 className="font-bold text-white">Modul & Fitur</h3></div>
+                                                    <div className="bg-slate-950/50 p-4 rounded-xl border border-white/5 mb-6">
+                                                        <div className="flex items-center justify-between">
+                                                            <div><div className="text-sm font-bold text-white">Izinkan Transaksi Hutang</div><div className="text-[10px] text-gray-500">Kasir dapat memproses bon.</div></div>
+                                                            <button onClick={() => updateOutlet(activeOutletData.id, { allowDebt: !activeOutletData.allowDebt })} className={`p-1.5 rounded-full transition-colors ${activeOutletData.allowDebt ? 'text-green-500 bg-green-500/10' : 'text-gray-600 bg-white/5'}`}>{activeOutletData.allowDebt ? <ToggleRight size={32} /> : <ToggleLeft size={32} />}</button>
                                                         </div>
                                                     </div>
-
-                                                    {[
-                                                        { id: 'pos_retail', label: 'Kasir Retail', desc: 'Scan barcode, rak, harga grosir.', icon: ShoppingBag },
-                                                        { id: 'pos_fnb', label: 'Kasir F&B', desc: 'Meja, resep, varian rasa.', icon: Coffee },
-                                                        { id: 'booking', label: 'Sistem Booking', desc: 'Reservasi tempat/jasa.', icon: Calendar },
-                                                        { id: 'production', label: 'Produksi', desc: 'Manufaktur & dapur pusat.', icon: Factory },
-                                                    ].map((mod) => {
-                                                        const isAssigned = activeOutletData.assignedModules?.includes(mod.id);
-                                                        const isAvailable = availableGlobalModules.includes(mod.id as AppModule);
-
-                                                        return (
-                                                            <div key={mod.id} className={`flex items-center justify-between p-3 rounded-xl border transition-all ${isAssigned ? 'bg-slate-800 border-blue-500/50' : 'bg-slate-950 border-white/5'}`}>
-                                                                <div className="flex items-center gap-3">
-                                                                    <div className={`p-2 rounded-lg ${isAssigned ? 'bg-blue-500/20 text-blue-400' : 'bg-white/5 text-gray-500'}`}>
-                                                                        <mod.icon size={18} />
-                                                                    </div>
-                                                                    <div>
-                                                                        <div className={`font-bold text-sm ${isAssigned ? 'text-white' : 'text-gray-400'}`}>{mod.label}</div>
-                                                                        <div className="text-[10px] text-gray-500">{mod.desc}</div>
-                                                                    </div>
-                                                                </div>
-                                                                
-                                                                {isAvailable ? (
-                                                                    <button 
-                                                                        onClick={() => updateOutletModules(activeOutletData.id, mod.id)}
-                                                                        className={`p-1.5 rounded-full transition-colors ${isAssigned ? 'text-blue-500 hover:bg-blue-500/10' : 'text-gray-600 hover:text-white hover:bg-white/10'}`}
-                                                                    >
-                                                                        {isAssigned ? <ToggleRight size={28} /> : <ToggleLeft size={28} />}
-                                                                    </button>
-                                                                ) : (
-                                                                    <span className="text-[10px] text-amber-500 border border-amber-500/20 bg-amber-500/10 px-2 py-1 rounded">No License</span>
-                                                                )}
-                                                            </div>
-                                                        );
-                                                    })}
-                                                </div>
-                                            )}
-
-                                            {/* 3. USERS & ROLES (NEW DYNAMIC CONFIG) */}
-                                            {configTab === 'users' && (
-                                                <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2">
-                                                    
-                                                    <div className="p-4 bg-purple-900/20 border border-purple-500/30 rounded-xl flex gap-3 mb-4">
-                                                        <Key className="text-purple-400 flex-shrink-0" size={20} />
-                                                        <div>
-                                                            <h4 className="font-bold text-purple-400 text-sm">Struktur Organisasi & Akses</h4>
-                                                            <p className="text-xs text-gray-400 mt-1 mb-2">
-                                                                Sesuaikan nama jabatan/role di outlet ini dan tentukan kewenangannya.
-                                                                Untuk menambah karyawan (orangnya), gunakan modul HRM.
-                                                            </p>
-                                                            <button onClick={() => onNavigate('hrm-app')} className="px-3 py-1 bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold rounded flex items-center gap-1 shadow-lg">
-                                                                <UsersIcon size={12} /> Kelola Karyawan di HRM
-                                                            </button>
-                                                        </div>
-                                                    </div>
-
-                                                    <div className="flex flex-col md:flex-row gap-6">
-                                                        {/* Role List (Editable) */}
-                                                        <div className="w-full md:w-52 space-y-3 flex-shrink-0">
-                                                            <div className="space-y-1">
-                                                                {outletRoles.map(role => (
-                                                                    <div key={role.id} className="flex items-center gap-2 group">
-                                                                        <button
-                                                                            onClick={() => setSelectedRoleConfigId(role.id)}
-                                                                            className={`flex-1 text-left px-3 py-2.5 rounded-lg text-xs font-bold transition-all border flex items-center gap-2 ${
-                                                                                selectedRoleConfigId === role.id 
-                                                                                ? 'bg-white/10 text-white border-white/10 shadow' 
-                                                                                : 'text-gray-500 hover:text-gray-300 hover:bg-white/5 border-transparent'
-                                                                            }`}
-                                                                        >
-                                                                            {role.level === 'high' && <Crown size={12} className="text-yellow-500" />}
-                                                                            {role.level === 'mid' && <BadgeCheck size={12} className="text-blue-500" />}
-                                                                            {role.name}
-                                                                        </button>
-                                                                        {/* Delete Button (Hidden for Manager to prevent lockout simulation) */}
-                                                                        {role.id !== 'mgr' && (
-                                                                            <button 
-                                                                                onClick={() => handleDeleteRole(role.id)}
-                                                                                className="p-1.5 rounded hover:bg-red-500/20 text-gray-600 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all"
-                                                                            >
-                                                                                <Trash2 size={12} />
-                                                                            </button>
-                                                                        )}
-                                                                    </div>
-                                                                ))}
-                                                            </div>
-
-                                                            {/* Add New Role */}
-                                                            <div className="pt-3 border-t border-white/5">
-                                                                <div className="text-[10px] font-bold text-gray-500 mb-2 uppercase">Tambah Jabatan Baru</div>
-                                                                <input 
-                                                                    type="text" 
-                                                                    placeholder="Nama Role (ex: Head Bar)" 
-                                                                    value={newRoleName}
-                                                                    onChange={(e) => setNewRoleName(e.target.value)}
-                                                                    className="w-full bg-black border border-white/10 rounded px-2 py-1.5 text-xs text-white focus:border-purple-500 outline-none mb-2"
-                                                                />
-                                                                <div className="flex gap-1 mb-2">
-                                                                    <button 
-                                                                        onClick={() => setNewRoleLevel('high')}
-                                                                        className={`flex-1 py-1 text-[10px] font-bold rounded border ${newRoleLevel === 'high' ? 'bg-yellow-500/20 text-yellow-500 border-yellow-500/50' : 'bg-slate-800 text-gray-500 border-transparent'}`}
-                                                                    >
-                                                                        Mgr
-                                                                    </button>
-                                                                    <button 
-                                                                        onClick={() => setNewRoleLevel('mid')}
-                                                                        className={`flex-1 py-1 text-[10px] font-bold rounded border ${newRoleLevel === 'mid' ? 'bg-blue-500/20 text-blue-500 border-blue-500/50' : 'bg-slate-800 text-gray-500 border-transparent'}`}
-                                                                    >
-                                                                        Spv
-                                                                    </button>
-                                                                    <button 
-                                                                        onClick={() => setNewRoleLevel('low')}
-                                                                        className={`flex-1 py-1 text-[10px] font-bold rounded border ${newRoleLevel === 'low' ? 'bg-gray-500/20 text-gray-300 border-gray-500/50' : 'bg-slate-800 text-gray-500 border-transparent'}`}
-                                                                    >
-                                                                        Staf
-                                                                    </button>
-                                                                </div>
-                                                                <button 
-                                                                    onClick={handleAddRole}
-                                                                    disabled={!newRoleName}
-                                                                    className="w-full py-1.5 bg-white/10 hover:bg-purple-600 text-gray-300 hover:text-white rounded text-xs font-bold transition-colors disabled:opacity-50"
-                                                                >
-                                                                    + Simpan Role
-                                                                </button>
-                                                            </div>
-                                                        </div>
-
-                                                        {/* Permission Matrix (Visual Placeholder for now) */}
-                                                        <div className="flex-1 bg-slate-950 rounded-xl border border-white/5 p-4 relative overflow-hidden">
-                                                            <div className="flex justify-between items-center mb-4 border-b border-white/5 pb-2 relative z-10">
-                                                                <h4 className="font-bold text-white text-sm">Izin Akses: <span className="text-purple-400">{activeRole?.name}</span></h4>
-                                                                <div className="text-[10px] text-gray-500">Level: {activeRole?.level.toUpperCase()}</div>
-                                                            </div>
-                                                            
-                                                            <div className="space-y-4 relative z-10">
-                                                                {/* POS Permissions */}
-                                                                <div>
-                                                                    <h5 className="text-xs font-bold text-gray-400 uppercase mb-2">Point of Sales</h5>
-                                                                    <div className="grid grid-cols-2 gap-2">
-                                                                        {['Void Transaksi', 'Berikan Diskon Manual', 'Refund / Retur', 'Buka Laci (No Sale)', 'Reprint Struk'].map((perm, idx) => (
-                                                                            <div key={idx} className="flex items-center gap-2 cursor-not-allowed opacity-80">
-                                                                                <div className={`w-4 h-4 rounded border flex items-center justify-center ${activeRole.level === 'high' || (activeRole.level === 'mid' && idx > 1) ? 'bg-green-500 border-green-500' : 'border-gray-600 bg-transparent'}`}>
-                                                                                    {(activeRole.level === 'high' || (activeRole.level === 'mid' && idx > 1)) && <CheckCircle size={10} className="text-black" />}
-                                                                                </div>
-                                                                                <span className="text-xs text-gray-300">{perm}</span>
-                                                                            </div>
-                                                                        ))}
-                                                                    </div>
-                                                                </div>
-
-                                                                {/* Backoffice Permissions */}
-                                                                <div>
-                                                                    <h5 className="text-xs font-bold text-gray-400 uppercase mb-2">Backoffice Access</h5>
-                                                                    <div className="grid grid-cols-2 gap-2">
-                                                                        {['Lihat Laporan Omzet', 'Edit Stok Barang', 'Lihat Data Pelanggan', 'Ubah Harga Produk'].map((perm, idx) => (
-                                                                            <div key={idx} className="flex items-center gap-2 cursor-not-allowed opacity-80">
-                                                                                <div className={`w-4 h-4 rounded border flex items-center justify-center ${activeRole.level === 'high' ? 'bg-green-500 border-green-500' : 'border-gray-600 bg-transparent'}`}>
-                                                                                    {activeRole.level === 'high' && <CheckCircle size={10} className="text-black" />}
-                                                                                </div>
-                                                                                <span className="text-xs text-gray-300">{perm}</span>
-                                                                            </div>
-                                                                        ))}
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-
-                                                            {/* Info Overlay */}
-                                                            <div className="absolute bottom-4 right-4 p-2 bg-slate-800/80 backdrop-blur rounded border border-white/10 max-w-xs">
-                                                                <p className="text-[10px] text-gray-400 text-right">
-                                                                    *Detail checkbox izin akses akan tersedia setelah modul sistem inti selesai diupdate.
-                                                                </p>
-                                                            </div>
-                                                        </div>
+                                                    <div className="space-y-3">
+                                                        <h4 className="text-xs font-bold text-gray-400 uppercase mb-2">Modul Aplikasi</h4>
+                                                        {[{ id: 'pos_retail', label: 'Kasir Retail' }, { id: 'pos_fnb', label: 'Kasir F&B' }, { id: 'booking', label: 'Booking' }, { id: 'production', label: 'Produksi' }].map((mod) => {
+                                                            const isActive = activeOutletData.assignedModules?.includes(mod.id);
+                                                            return <div key={mod.id} className={`flex items-center justify-between p-4 rounded-xl border transition-all ${isActive ? 'bg-slate-800 border-orange-500/50' : 'bg-slate-950 border-white/5'}`}><div><div className="font-bold text-sm text-white">{mod.label}</div></div><button onClick={() => updateOutletModules(activeOutletData.id, mod.id)} className={`p-1.5 rounded-full transition-colors ${isActive ? 'text-orange-500 bg-orange-500/10' : 'text-gray-600 bg-white/5'}`}>{isActive ? <ToggleRight size={28} /> : <ToggleLeft size={28} />}</button></div>;
+                                                        })}
                                                     </div>
                                                 </div>
                                             )}
-
-                                            {/* 4. HARDWARE */}
                                             {configTab === 'hardware' && (
-                                                <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2">
-                                                    <div className="p-4 bg-slate-950 rounded-xl border border-white/5">
-                                                        <h4 className="font-bold text-white text-sm mb-4 flex items-center gap-2"><Printer size={16}/> Printer Konfigurasi</h4>
-                                                        <div className="space-y-3">
-                                                            {['Printer Struk (Kasir)', 'Printer Dapur', 'Printer Label'].map((p, i) => (
-                                                                <div key={i} className="flex items-center justify-between p-2 bg-slate-900 rounded border border-white/5">
-                                                                    <span className="text-sm text-gray-300">{p}</span>
-                                                                    <span className="text-xs text-red-400 bg-red-500/10 px-2 py-0.5 rounded">Not Connected</span>
-                                                                </div>
-                                                            ))}
-                                                        </div>
-                                                    </div>
-                                                    <div className="p-4 bg-slate-950 rounded-xl border border-white/5">
-                                                        <h4 className="font-bold text-white text-sm mb-4 flex items-center gap-2"><Monitor size={16}/> Layar Display</h4>
-                                                        <div className="space-y-3">
-                                                            {[
-                                                                { label: 'Customer Display', hw: 'customer_display' },
-                                                                { label: 'Kitchen Display (KDS)', hw: 'kds_tablet' },
-                                                                { label: 'Queue Display', hw: 'queue_display' }
-                                                            ].map((dev, idx) => (
-                                                                <div key={idx} className="flex items-center justify-between p-2 bg-slate-900 rounded border border-white/5">
-                                                                    <span className="text-sm text-gray-300">{dev.label}</span>
-                                                                    <button 
-                                                                        onClick={() => onToggleHardware && onToggleHardware(dev.hw as HardwareModule)}
-                                                                        className={`w-8 h-4 rounded-full relative transition-colors ${activeHardware.includes(dev.hw as HardwareModule) ? 'bg-green-500' : 'bg-slate-700'}`}
-                                                                    >
-                                                                        <div className={`absolute top-0.5 w-3 h-3 bg-white rounded-full transition-all ${activeHardware.includes(dev.hw as HardwareModule) ? 'left-4.5' : 'left-0.5'}`}></div>
-                                                                    </button>
-                                                                </div>
-                                                            ))}
-                                                        </div>
-                                                    </div>
+                                                <div className="space-y-6">
+                                                    <div className="pb-4 border-b border-white/5"><h3 className="font-bold text-white">Perangkat Keras</h3></div>
+                                                    <div className="space-y-3">{['Printer Kasir', 'Printer Dapur', 'Label Barcode'].map((dev, i) => <div key={i} className="flex items-center justify-between p-4 bg-slate-950 rounded-xl border border-white/5"><div className="flex items-center gap-3"><Printer size={18} className="text-gray-400" /><span className="text-sm font-bold text-white">{dev}</span></div><span className="text-[10px] text-red-400 bg-red-500/10 px-2 py-1 rounded">Not Connected</span></div>)}</div>
                                                 </div>
                                             )}
-
-                                            {/* 5. RECEIPT */}
                                             {configTab === 'receipt' && (
-                                                <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2">
-                                                    <div className="space-y-4">
-                                                        <h4 className="font-bold text-white text-sm border-b border-white/5 pb-2">Pajak & Biaya</h4>
-                                                        <div className="grid grid-cols-2 gap-4">
-                                                            <div>
-                                                                <label className="text-xs text-gray-500 font-bold block mb-1">Pajak Resto / PPN (%)</label>
-                                                                <input type="number" defaultValue="10" className="w-full bg-slate-950 border border-white/10 rounded p-2 text-sm text-white" />
-                                                            </div>
-                                                            <div>
-                                                                <label className="text-xs text-gray-500 font-bold block mb-1">Service Charge (%)</label>
-                                                                <input type="number" defaultValue="5" className="w-full bg-slate-950 border border-white/10 rounded p-2 text-sm text-white" />
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <div className="space-y-4">
-                                                        <h4 className="font-bold text-white text-sm border-b border-white/5 pb-2">Tampilan Struk</h4>
-                                                        <div>
-                                                            <label className="text-xs text-gray-500 font-bold block mb-1">Header Text</label>
-                                                            <input type="text" defaultValue={`Selamat Datang di ${activeOutletData.name}`} className="w-full bg-slate-950 border border-white/10 rounded p-2 text-sm text-white" />
-                                                        </div>
-                                                        <div>
-                                                            <label className="text-xs text-gray-500 font-bold block mb-1">Footer Text</label>
-                                                            <textarea rows={3} defaultValue="Terima kasih atas kunjungan Anda." className="w-full bg-slate-950 border border-white/10 rounded p-2 text-sm text-white resize-none" />
-                                                        </div>
+                                                <div className="space-y-6">
+                                                    <div className="pb-4 border-b border-white/5"><h3 className="font-bold text-white">Tampilan Struk</h3></div>
+                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                        <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Footer Struk</label><input type="text" defaultValue="Terima Kasih!" className="w-full bg-slate-950 border border-white/10 rounded-lg p-3 text-sm text-white" /></div>
+                                                        <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Pajak (%)</label><input type="number" defaultValue="10" className="w-full bg-slate-950 border border-white/10 rounded-lg p-3 text-sm text-white" /></div>
                                                     </div>
                                                 </div>
                                             )}
-
                                         </div>
                                     </div>
-                                ) : (
-                                    <div className="flex-1 flex items-center justify-center text-gray-500 h-full">
-                                        {selectedBrand && outlets.length > 0 ? (
-                                             <div className="text-center">
-                                                 <Store size={48} className="mx-auto mb-4 opacity-20" />
-                                                 <p>Tidak ada cabang di brand ini.</p>
-                                                 <button 
-                                                    onClick={() => setShowAddBranchModal(true)}
-                                                    className="mt-4 px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded-lg text-white font-bold text-sm"
-                                                 >
-                                                     + Tambah Cabang
-                                                 </button>
-                                             </div>
-                                        ) : (
-                                             <div className="text-center">
-                                                 <Store size={48} className="mx-auto mb-4 opacity-20" />
-                                                 <p>Pilih atau buat unit bisnis baru.</p>
-                                             </div>
-                                        )}
-                                    </div>
-                                )}
+                                ) : null}
                             </div>
                         </>
                         ) : (
-                             <div className="flex-1 flex items-center justify-center text-gray-500 h-full">
-                                <div className="text-center">
-                                    <Briefcase size={48} className="mx-auto mb-4 opacity-20" />
-                                    <h3 className="text-xl font-bold text-white mb-2">Belum Ada Unit Bisnis</h3>
-                                    <p className="max-w-md mx-auto mb-6">Mulai dengan membuat Brand pertama Anda untuk mengelola outlet dan konfigurasi sistem.</p>
-                                    <button 
-                                        onClick={() => setShowAddBrandModal(true)}
-                                        className="px-6 py-3 bg-sibos-orange hover:bg-orange-600 text-white rounded-xl font-bold shadow-lg"
-                                    >
-                                        + Buat Unit Bisnis Baru
-                                    </button>
-                                </div>
+                             <div className="flex-1 flex items-center justify-center text-gray-500 h-full p-8 text-center">
+                                <p>Pilih atau buat unit bisnis baru.</p>
                             </div>
                         )}
                     </>
                 )}
 
-                {/* 2. BILLING (GLOBAL) */}
-                {globalTab === 'billing' && (
-                    <GlassCard className="bg-slate-900/50">
-                        <div className="text-center py-12">
-                            <CreditCard size={48} className="mx-auto text-green-500 mb-4" />
-                            <h2 className="text-xl font-bold text-white">Billing & Lisensi</h2>
-                            <p className="text-gray-400">Kelola paket langganan Enterprise Anda di sini.</p>
-                        </div>
-                    </GlassCard>
-                )}
-
-                {/* 4. SECURITY (GLOBAL) */}
-                {globalTab === 'security' && (
-                    <GlassCard className="bg-slate-900/50">
-                        <h2 className="text-xl font-bold text-white mb-6">Keamanan & Data</h2>
-                        <div className="space-y-4">
-                            <div className="flex items-center justify-between p-4 bg-slate-950 rounded-xl border border-white/5">
-                                <div>
-                                    <div className="font-bold text-white">Two-Factor Authentication (2FA)</div>
-                                    <div className="text-xs text-gray-400">Wajibkan OTP saat login.</div>
+                {/* === TAB: USER PROFILE === */}
+                {globalTab === 'profile' && (
+                    <GlassCard className="bg-slate-900 border-white/10 p-8 animate-in fade-in">
+                        <div className="flex flex-col md:flex-row gap-8 items-start">
+                            {/* Avatar */}
+                            <div className="flex-shrink-0 flex flex-col items-center gap-4">
+                                <div className="w-32 h-32 rounded-full bg-slate-800 border-4 border-slate-700 flex items-center justify-center text-white text-4xl font-bold shadow-2xl relative overflow-hidden group cursor-pointer">
+                                    {userProfile.name.charAt(0)}
+                                    <div className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <ImageIcon size={24} className="text-white"/>
+                                    </div>
                                 </div>
-                                <ToggleLeft size={32} className="text-gray-600 cursor-pointer" />
+                                <div className="text-center">
+                                    <h3 className="font-bold text-white text-lg">{userProfile.name}</h3>
+                                    <p className="text-sm text-sibos-orange font-medium">{userProfile.role}</p>
+                                </div>
+                            </div>
+
+                            {/* Form */}
+                            <div className="flex-1 w-full space-y-6">
+                                <div>
+                                    <h3 className="text-xl font-bold text-white border-b border-white/5 pb-2 mb-4">Informasi Pribadi</h3>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="text-xs text-gray-500 font-bold uppercase mb-1 block">Nama Lengkap</label>
+                                            <div className="relative">
+                                                <User className="absolute left-3 top-3 text-gray-500" size={16} />
+                                                <input type="text" value={userProfile.name} onChange={e => setUserProfile({...userProfile, name: e.target.value})} className="w-full bg-slate-950 border border-white/10 rounded-lg py-2.5 pl-10 pr-3 text-sm text-white focus:border-sibos-orange outline-none" />
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label className="text-xs text-gray-500 font-bold uppercase mb-1 block">Email</label>
+                                            <div className="relative">
+                                                <Mail className="absolute left-3 top-3 text-gray-500" size={16} />
+                                                <input type="email" value={userProfile.email} onChange={e => setUserProfile({...userProfile, email: e.target.value})} className="w-full bg-slate-950 border border-white/10 rounded-lg py-2.5 pl-10 pr-3 text-sm text-white focus:border-sibos-orange outline-none" />
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label className="text-xs text-gray-500 font-bold uppercase mb-1 block">Nomor Telepon / WA</label>
+                                            <div className="relative">
+                                                <Phone className="absolute left-3 top-3 text-gray-500" size={16} />
+                                                <input type="tel" value={userProfile.phone} onChange={e => setUserProfile({...userProfile, phone: e.target.value})} className="w-full bg-slate-950 border border-white/10 rounded-lg py-2.5 pl-10 pr-3 text-sm text-white focus:border-sibos-orange outline-none" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <h3 className="text-xl font-bold text-white border-b border-white/5 pb-2 mb-4">Keamanan</h3>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="text-xs text-gray-500 font-bold uppercase mb-1 block">Password Baru</label>
+                                            <div className="relative">
+                                                <Lock className="absolute left-3 top-3 text-gray-500" size={16} />
+                                                <input type="password" value={userProfile.newPassword} onChange={e => setUserProfile({...userProfile, newPassword: e.target.value})} placeholder="Biarkan kosong jika tidak diganti" className="w-full bg-slate-950 border border-white/10 rounded-lg py-2.5 pl-10 pr-3 text-sm text-white focus:border-sibos-orange outline-none" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </GlassCard>
                 )}
-
+                
+                {/* Billing Tab Placeholder */}
+                {globalTab === 'billing' && (
+                    <GlassCard className="bg-slate-900/50 text-center py-12">
+                        <CreditCard size={48} className="mx-auto text-green-500 mb-4" />
+                        <h2 className="text-xl font-bold text-white">Billing & Lisensi</h2>
+                    </GlassCard>
+                )}
             </div>
          </div>
       </div>

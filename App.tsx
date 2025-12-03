@@ -7,7 +7,7 @@ import { CommunityPage } from './components/CommunityPage';
 import { CommunityInvestorPage } from './components/CommunityInvestorPage';
 import { CommunityDeveloperPage } from './components/CommunityDeveloperPage';
 import { CommunityPartnerPage } from './components/CommunityPartnerPage';
-import { CommunityUserPage } from './components/CommunityUserPage'; // Import new User Page
+import { CommunityUserPage } from './components/CommunityUserPage';
 import { Pricing } from './components/Pricing';
 import { Footer } from './components/Footer';
 import { About } from './components/About';
@@ -20,6 +20,19 @@ import { HRMPage } from './components/HRMPage';
 import { AccountingPage } from './components/AccountingPage';
 import { AIPage } from './components/AIPage';
 import { MarketplacePage } from './components/MarketplacePage'; 
+import { SocialMediaPage } from './components/SocialMediaPage'; 
+import { WebstorePage } from './components/WebstorePage';
+import { SolutionFnbPage } from './components/SolutionFnbPage'; 
+import { SolutionRetailPage } from './components/SolutionRetailPage';
+import { SolutionServicePage } from './components/SolutionServicePage';
+import { SolutionFashionPage } from './components/SolutionFashionPage';
+import { SolutionPharmacyPage } from './components/SolutionPharmacyPage';
+import { SolutionManufacturingPage } from './components/SolutionManufacturingPage';
+import { SolutionUMKMPage } from './components/SolutionUMKMPage';
+import { SolutionEnterprisePage } from './components/SolutionEnterprisePage';
+import { SolutionMultiOutletPage } from './components/SolutionMultiOutletPage';
+import { SolutionFranchisePage } from './components/SolutionFranchisePage';
+import { SolutionMultiBusinessPage } from './components/SolutionMultiBusinessPage';
 import { LoginPage } from './components/LoginPage';
 import { BackofficePage } from './components/BackofficePage';
 import { POSTransactionPage } from './components/POSTransactionPage';
@@ -32,6 +45,7 @@ import { HRMAppPage } from './components/HRMAppPage';
 import { BookingAppPage } from './components/BookingAppPage'; 
 import { KDSAppPage } from './components/KDSAppPage'; 
 import { ProductionAppPage } from './components/ProductionAppPage'; 
+import { PurchaseAppPage } from './components/PurchaseAppPage';
 import { CustomerDisplayPage } from './components/CustomerDisplayPage'; 
 import { QueueDisplayPage } from './components/QueueDisplayPage'; 
 import { KitchenDisplayPage } from './components/KitchenDisplayPage'; 
@@ -45,15 +59,56 @@ import { SibosProvider } from './contexts/SibosContext';
 
 function App() {
   const [showBackToTop, setShowBackToTop] = useState(false);
-  const [activePage, setActivePage] = useState<Page>('home');
-  const [userRole, setUserRole] = useState<UserRole>(null);
-  const [businessCategory, setBusinessCategory] = useState<BusinessCategory | undefined>(undefined);
+
+  // --- PERSISTENT STATE INITIALIZATION ---
+  const [activePage, setActivePage] = useState<Page>(() => {
+      const saved = localStorage.getItem('sibos_active_page');
+      return (saved as Page) || 'home';
+  });
+
+  const [userRole, setUserRole] = useState<UserRole>(() => {
+      const saved = localStorage.getItem('sibos_user_role');
+      return (saved as UserRole) || null;
+  });
+
+  const [businessCategory, setBusinessCategory] = useState<BusinessCategory | undefined>(() => {
+      const saved = localStorage.getItem('sibos_business_category');
+      return (saved as BusinessCategory) || undefined;
+  });
   
-  // State for active hardware modules (Global Setting)
-  const [activeHardware, setActiveHardware] = useState<HardwareModule[]>([]);
+  const [activeHardware, setActiveHardware] = useState<HardwareModule[]>(() => {
+      const saved = localStorage.getItem('sibos_active_hardware');
+      return saved ? JSON.parse(saved) : [];
+  });
   
-  // State for active Business Modules (Hybrid System)
-  const [activeModules, setActiveModules] = useState<AppModule[]>([]);
+  const [activeModules, setActiveModules] = useState<AppModule[]>(() => {
+      const saved = localStorage.getItem('sibos_active_modules');
+      return saved ? JSON.parse(saved) : [];
+  });
+
+  // --- PERSISTENCE EFFECTS ---
+  useEffect(() => {
+      localStorage.setItem('sibos_active_page', activePage);
+  }, [activePage]);
+
+  useEffect(() => {
+      if (userRole) localStorage.setItem('sibos_user_role', userRole);
+      else localStorage.removeItem('sibos_user_role');
+  }, [userRole]);
+
+  useEffect(() => {
+      if (businessCategory) localStorage.setItem('sibos_business_category', businessCategory);
+      else localStorage.removeItem('sibos_business_category');
+  }, [businessCategory]);
+
+  useEffect(() => {
+      localStorage.setItem('sibos_active_hardware', JSON.stringify(activeHardware));
+  }, [activeHardware]);
+
+  useEffect(() => {
+      localStorage.setItem('sibos_active_modules', JSON.stringify(activeModules));
+  }, [activeModules]);
+
 
   useEffect(() => {
     const handleScroll = () => {
@@ -87,36 +142,36 @@ function App() {
     setUserRole(role);
     setBusinessCategory(category);
     
-    // 1. Initialize Default Hardware
-    let defaultHardware: HardwareModule[] = ['printer', 'scanner'];
-    if (category === 'fnb') {
-        defaultHardware = ['printer', 'kitchen_display', 'customer_display', 'kds_tablet'];
-    } else if (category === 'retail') {
-        defaultHardware = ['printer', 'scanner', 'customer_display'];
-    }
+    // 1. Initialize Default Hardware (Only if empty)
     if (activeHardware.length === 0) {
+        let defaultHardware: HardwareModule[] = ['printer', 'scanner'];
+        if (category === 'fnb') {
+            defaultHardware = ['printer', 'kitchen_display', 'customer_display', 'kds_tablet'];
+        } else if (category === 'retail') {
+            defaultHardware = ['printer', 'scanner', 'customer_display'];
+        }
         setActiveHardware(defaultHardware);
     }
 
-    // 2. Initialize Default Modules (The "Preset" Logic)
-    // This runs only on initial login simulation. In real app, fetch from DB.
+    // 2. Initialize Default Modules (Only if empty)
     if (activeModules.length === 0) {
         let modules: AppModule[] = ['accounting', 'crm', 'hrm', 'marketing']; // Base modules
         
         switch (category) {
             case 'fnb':
-                modules.push('pos_fnb', 'production'); // Production for recipes
+                modules.push('pos_fnb', 'production', 'booking');
                 break;
             case 'retail':
             case 'fashion':
+            case 'health':
                 modules.push('pos_retail');
                 break;
             case 'service':
-                modules.push('pos_retail', 'booking'); // Service often needs booking + retail parts
+                modules.push('pos_retail', 'booking');
                 break;
             case 'manufacturing':
             case 'agri':
-                modules.push('production', 'pos_retail'); // Selling bulk
+                modules.push('production', 'pos_retail');
                 break;
             case 'hospitality':
             case 'education':
@@ -140,9 +195,12 @@ function App() {
   const handleLogout = () => {
     setUserRole(null);
     setBusinessCategory(undefined);
-    // Optional: Clear active modules/hardware on logout if you want to reset simulation fully
-    // setActiveModules([]); 
-    // setActiveHardware([]);
+    // Clear persistent storage for session
+    localStorage.removeItem('sibos_user_role');
+    localStorage.removeItem('sibos_business_category');
+    localStorage.removeItem('sibos_active_page');
+    // Note: We keep modules/hardware config for UX convenience unless hard reset
+    
     setActivePage('home'); 
     window.scrollTo(0, 0);
   };
@@ -198,27 +256,27 @@ function App() {
     }
     if (activePage === 'irm-app') {
         if (!userRole) return <LoginPage onLogin={handleLogin} />;
-        return <IRMAppPage onNavigate={handleNavigation} />;
+        return <IRMAppPage onNavigate={handleNavigation} activeHardware={activeHardware} activeModules={activeModules} userRole={userRole} />;
     }
     if (activePage === 'crm-app') {
         if (!userRole) return <LoginPage onLogin={handleLogin} />;
-        return <CRMAppPage onNavigate={handleNavigation} />;
+        return <CRMAppPage onNavigate={handleNavigation} activeHardware={activeHardware} activeModules={activeModules} />;
     }
     if (activePage === 'accounting-app') {
         if (!userRole) return <LoginPage onLogin={handleLogin} />;
-        return <AccountingAppPage onNavigate={handleNavigation} />;
+        return <AccountingAppPage onNavigate={handleNavigation} activeHardware={activeHardware} activeModules={activeModules} />;
     }
     if (activePage === 'marketing-app') {
         if (!userRole) return <LoginPage onLogin={handleLogin} />;
-        return <MarketingAppPage onNavigate={handleNavigation} />;
+        return <MarketingAppPage onNavigate={handleNavigation} activeHardware={activeHardware} activeModules={activeModules} />;
     }
     if (activePage === 'hrm-app') {
         if (!userRole) return <LoginPage onLogin={handleLogin} />;
-        return <HRMAppPage onNavigate={handleNavigation} />;
+        return <HRMAppPage onNavigate={handleNavigation} activeHardware={activeHardware} activeModules={activeModules} />;
     }
     if (activePage === 'booking-app') {
         if (!userRole) return <LoginPage onLogin={handleLogin} />;
-        return <BookingAppPage onNavigate={handleNavigation} />;
+        return <BookingAppPage onNavigate={handleNavigation} activeHardware={activeHardware} activeModules={activeModules} />;
     }
     if (activePage === 'kds-app') {
         if (!userRole) return <LoginPage onLogin={handleLogin} />;
@@ -226,7 +284,11 @@ function App() {
     }
     if (activePage === 'production-app') {
         if (!userRole) return <LoginPage onLogin={handleLogin} />;
-        return <ProductionAppPage onNavigate={handleNavigation} />;
+        return <ProductionAppPage onNavigate={handleNavigation} activeHardware={activeHardware} activeModules={activeModules} />;
+    }
+    if (activePage === 'purchase-app') {
+        if (!userRole) return <LoginPage onLogin={handleLogin} />;
+        return <PurchaseAppPage onNavigate={handleNavigation} activeHardware={activeHardware} activeModules={activeModules} />;
     }
 
     // Display Screens
@@ -264,7 +326,7 @@ function App() {
         return <CommunityDeveloperPage />;
       case 'community-partner':
         return <CommunityPartnerPage />;
-      case 'community-user': // New Route
+      case 'community-user': 
         return <CommunityUserPage />;
       case 'about':
         return <About onNavigate={handleNavigation} />;
@@ -285,7 +347,33 @@ function App() {
       case 'ai':
         return <AIPage />;
       case 'marketplace': 
-        return <MarketplacePage />;
+        return <MarketplacePage onNavigate={handleNavigation} />;
+      case 'social-media': 
+        return <SocialMediaPage onNavigate={handleNavigation} />;
+      case 'webstore':
+        return <WebstorePage onNavigate={handleNavigation} />;
+      case 'solution-fnb':
+        return <SolutionFnbPage onNavigate={handleNavigation} />;
+      case 'solution-retail':
+        return <SolutionRetailPage onNavigate={handleNavigation} />;
+      case 'solution-service':
+        return <SolutionServicePage onNavigate={handleNavigation} />;
+      case 'solution-fashion':
+        return <SolutionFashionPage onNavigate={handleNavigation} />;
+      case 'solution-pharmacy':
+        return <SolutionPharmacyPage onNavigate={handleNavigation} />;
+      case 'solution-manufacturing':
+        return <SolutionManufacturingPage onNavigate={handleNavigation} />;
+      case 'solution-umkm':
+        return <SolutionUMKMPage onNavigate={handleNavigation} />;
+      case 'solution-enterprise':
+        return <SolutionEnterprisePage onNavigate={handleNavigation} />;
+      case 'solution-multioutlet':
+        return <SolutionMultiOutletPage onNavigate={handleNavigation} />;
+      case 'solution-franchise':
+        return <SolutionFranchisePage onNavigate={handleNavigation} />;
+      case 'solution-multibusiness':
+        return <SolutionMultiBusinessPage onNavigate={handleNavigation} />;
       case 'backoffice':
         return <LoginPage onLogin={handleLogin} />; 
       case 'home':
@@ -312,6 +400,7 @@ function App() {
     activePage === 'booking-app' || 
     activePage === 'kds-app' || 
     activePage === 'production-app' || 
+    activePage === 'purchase-app' || 
     activePage === 'customer-display' || 
     activePage === 'queue-display' || 
     activePage === 'kitchen-display' || 

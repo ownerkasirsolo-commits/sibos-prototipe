@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Check } from 'lucide-react';
 import { PricingTier } from '../types';
@@ -35,9 +36,9 @@ export const Pricing: React.FC = () => {
 
         <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
           {tiers.map((tier, idx) => (
-            <GlassCard key={idx} className={`relative flex flex-col ${tier.recommended ? 'border-sibos-orange bg-sibos-orange/10' : ''}`}>
+            <GlassCard key={idx} className={`relative flex flex-col ${tier.recommended ? 'border-sibos-orange bg-sibos-orange/10 scale-105 shadow-2xl shadow-orange-900/20 z-10' : 'hover:border-white/20'}`}>
               {tier.recommended && (
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-sibos-orange text-white px-4 py-1 rounded-full text-xs font-bold uppercase tracking-wide shadow-lg">
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-gradient-to-r from-sibos-orange to-red-600 text-white px-4 py-1 rounded-full text-xs font-bold uppercase tracking-wide shadow-lg">
                   Paling Laris
                 </div>
               )}
@@ -53,8 +54,8 @@ export const Pricing: React.FC = () => {
               </ul>
               <button className={`w-full py-3 rounded-xl font-bold transition-all ${
                 tier.recommended 
-                  ? 'bg-sibos-orange hover:bg-orange-600 text-white shadow-lg shadow-orange-900/40' 
-                  : 'bg-white/10 hover:bg-white/20 text-white'
+                  ? 'bg-gradient-to-r from-sibos-orange to-red-600 hover:from-orange-500 hover:to-red-500 text-white shadow-lg shadow-orange-900/40 transform hover:-translate-y-1' 
+                  : 'bg-white/10 hover:bg-white/20 text-white hover:text-sibos-orange'
               }`}>
                 Pilih Paket
               </button>

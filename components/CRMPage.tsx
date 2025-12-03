@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { 
   Heart, Users, Trophy, Gift, MessageCircle, 
@@ -32,16 +33,16 @@ export const CRMPage: React.FC = () => {
         <div className="container mx-auto px-6 text-center relative z-10">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 text-pink-400 text-xs font-bold tracking-wider mb-8 shadow-lg shadow-pink-900/20 backdrop-blur-md">
             <Heart size={14} className="animate-pulse" />
-            CUSTOMER RELATIONSHIP MANAGEMENT
+            HUMAN VS ALGORITHM
           </div>
           <h1 className="text-5xl md:text-7xl font-extrabold text-white mb-6 leading-tight drop-shadow-2xl">
-            Ubah Pembeli Jadi <br />
+            Lawan Algoritma Dingin <br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-sibos-orange">
-              Pelanggan Setia
+              Dengan Sentuhan Manusia
             </span>
           </h1>
           <p className="text-xl text-gray-200 max-w-3xl mx-auto leading-relaxed drop-shadow-md">
-            Biaya mencari pelanggan baru 5x lebih mahal daripada merawat yang lama. SIBOS CRM membantu Anda mengenal, memahami, dan memanjakan pelanggan agar terus kembali.
+            Korporasi melihat pelanggan sebagai *Data Point*. SIBOS membantu UMKM melihat pelanggan sebagai Manusia. Membangun loyalitas emosional yang tidak bisa dibeli dengan uang promosi *burn-rate* kompetitor raksasa.
           </p>
         </div>
       </section>

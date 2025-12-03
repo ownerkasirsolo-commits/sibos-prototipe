@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { 
   BrainCircuit, Bot, Sparkles, Zap, LineChart, 
@@ -33,16 +34,16 @@ export const AIPage: React.FC = () => {
         <div className="container mx-auto px-6 text-center relative z-10">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-violet-500/10 border border-violet-500/30 text-violet-400 text-xs font-bold tracking-wider mb-8 shadow-[0_0_20px_rgba(139,92,246,0.3)] backdrop-blur-md">
             <BrainCircuit size={14} className="animate-pulse" />
-            SIBOS INTELLIGENCE CORE
+            THE EQUALIZER
           </div>
           <h1 className="text-5xl md:text-7xl font-extrabold text-white mb-6 leading-tight drop-shadow-2xl">
-            Lebih Dari Data, <br />
+            Demokratisasi <br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-400 via-fuchsia-400 to-white">
-              Ini Wawasan Masa Depan
+              Kecerdasan Super
             </span>
           </h1>
           <p className="text-xl text-gray-200 max-w-3xl mx-auto leading-relaxed drop-shadow-md">
-            SIBOS AI tidak hanya menyajikan grafik masa lalu. Ia memprediksi tren masa depan, memberi saran keputusan, dan mengotomatiskan pekerjaan berpikir Anda.
+            Teknologi prediksi canggih tidak boleh hanya dimiliki Amazon atau Google. Kami mencuri api Prometheus ini dan memberikannya kepada pedagang pasar agar bisa bersaing setara.
           </p>
         </div>
       </section>

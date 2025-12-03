@@ -10,13 +10,18 @@ import { Feature } from '../types';
 
 const featureList: Feature[] = [
   {
-    title: 'Multi-Brand Ecosystem',
-    description: 'Satu akun untuk kelola Restoran, Toko Baju, dan Bengkel sekaligus. Data terpisah per brand namun terpusat di satu dashboard owner.',
+    title: 'Empire Management (Konglomerasi)',
+    description: 'Anda punya Restoran, Toko Baju, dan Bengkel sekaligus? Kelola semuanya dalam satu akun (Single Sign-On). Ganti "topi" bisnis Anda hanya dengan satu klik. Laporan terpisah per brand, namun terakumulasi di dashboard owner.',
     icon: Building2
   },
   {
-    title: 'POS Hybrid Canggih',
-    description: 'Mode kasir fleksibel (Ritel/F&B). Mendukung multi-varian, multi-harga, dan transaksi desimal presisi.',
+    title: 'Multi-Outlet & Cabang Terpusat',
+    description: 'Kontrol stok dan omzet dari 100 cabang berbeda secara real-time. Transfer stok antar cabang, pengaturan harga berbeda per wilayah, dan kontrol hak akses karyawan pusat vs cabang.',
+    icon: Store
+  },
+  {
+    title: 'POS Hybrid Adaptif',
+    description: 'Antarmuka kasir berubah otomatis sesuai jenis bisnis. Mode Meja untuk Restoran, Mode Barcode untuk Retail, dan Mode Booking untuk Jasa.',
     icon: Monitor
   },
   {
@@ -30,13 +35,8 @@ const featureList: Feature[] = [
     icon: Cpu
   },
   {
-    title: 'Manajemen Stok & Produksi',
-    description: 'Lacak HPP bahan baku (resep), assembly produk bundling, dan transfer stok antar gudang/cabang tanpa selisih.',
-    icon: Layers
-  },
-  {
     title: 'CRM & Membership Global',
-    description: 'Poin member berlaku lintas cabang. Kenali pelanggan Anda di outlet manapun mereka berbelanja.',
+    description: 'Satu ID Member berlaku di seluruh lini bisnis Anda. Poin dari beli kopi bisa dipakai untuk diskon servis motor di bengkel Anda.',
     icon: Users
   },
   {
@@ -57,10 +57,10 @@ export const Features: React.FC = () => {
       <div className="container mx-auto px-6">
         <div className="text-center mb-16">
           <h2 className="text-3xl md:text-5xl font-bold mb-4">
-            <span className="text-white">Satu Akun.</span> <span className="text-sibos-orange">Ribuan Kemungkinan.</span>
+            <span className="text-white">Bangun Konglomerasi.</span> <span className="text-sibos-orange">Satu Kendali.</span>
           </h2>
-          <p className="text-gray-400 max-w-3xl mx-auto text-lg">
-            Lupakan batasan software lama. SIBOS dirancang agar Anda bisa menjalankan Coffee Shop di pagi hari, Butik di siang hari, dan Kost-kostan di malam hari—semua dalam satu genggaman.
+          <p className="text-gray-400 max-w-3xl mx-auto text-lg leading-relaxed">
+            Jangan batasi ambisi Anda dengan software yang kaku. SIBOS dirancang untuk pengusaha visioner yang menjalankan <strong>Coffee Shop</strong> di pagi hari, memantau <strong>Butik Fashion</strong> di siang hari, dan mengecek laporan <strong>Bengkel</strong> di malam hari—semua tanpa perlu <em>log out</em>.
           </p>
         </div>
 

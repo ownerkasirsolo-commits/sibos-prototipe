@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { 
   Users, Banknote, Clock, MapPin, CalendarCheck, 
@@ -28,16 +29,16 @@ export const HRMPage: React.FC = () => {
         <div className="container mx-auto px-6 text-center relative z-10">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-bold tracking-wider mb-8 shadow-[0_0_20px_rgba(16,185,129,0.2)] backdrop-blur-md">
             <Users size={14} />
-            HUMAN RESOURCE MANAGEMENT
+            KEADILAN SDM
           </div>
           <h1 className="text-5xl md:text-7xl font-extrabold text-white mb-6 leading-tight drop-shadow-2xl">
-            Aset Terbesar Anda <br />
+            Bangun Pasukan Loyal <br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-300">
-              Adalah Manusia
+              Bukan Sekadar Karyawan
             </span>
           </h1>
           <p className="text-xl text-gray-200 max-w-3xl mx-auto leading-relaxed drop-shadow-md">
-            Tinggalkan cara lama menghitung gaji dengan Excel. SIBOS HRM mengotomatisasi Payroll, Absensi, dan KPI agar Anda bisa fokus membesarkan tim, bukan mengurus administrasi.
+            Transparansi gaji dan absensi adalah bentuk keadilan. Hilangkan rasa curiga antara Bos dan Tim. Ubah staff menjadi partner perjuangan dengan SIBOS HRM.
           </p>
         </div>
       </section>

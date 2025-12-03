@@ -25,7 +25,7 @@ export const MobileAdminPage: React.FC<MobileAdminPageProps> = ({ onNavigate, on
       {/* Top Bar */}
       <div className="sticky top-0 z-30 bg-slate-900/80 backdrop-blur-md border-b border-white/5 px-6 py-4 flex justify-between items-center">
         <div>
-           <div className="text-xs text-blue-400 font-bold uppercase tracking-wider">Admin Panel</div>
+           <div className="text-xs text-orange-400 font-bold uppercase tracking-wider">Admin Panel</div>
            <div className="font-bold text-lg text-white">Operasional</div>
         </div>
         <div className="flex gap-3">
@@ -46,7 +46,7 @@ export const MobileAdminPage: React.FC<MobileAdminPageProps> = ({ onNavigate, on
             <div className="flex justify-between items-start mb-4">
                <div>
                   <div className="text-xs text-gray-400 mb-1 flex items-center gap-1">
-                     <MapPin size={12} className="text-blue-400" /> {selectedOutlet.location || selectedOutlet.name}
+                     <MapPin size={12} className="text-orange-400" /> {selectedOutlet.location || selectedOutlet.name}
                   </div>
                   <div className="text-2xl font-bold font-mono">{new Date().toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})}</div>
                   <div className="text-xs text-gray-500">{new Date().toDateString()}</div>
@@ -59,7 +59,7 @@ export const MobileAdminPage: React.FC<MobileAdminPageProps> = ({ onNavigate, on
             {!isClockedIn ? (
                <button 
                  onClick={() => setIsClockedIn(true)}
-                 className="w-full py-3 bg-blue-600 hover:bg-blue-500 rounded-xl font-bold text-white shadow-lg shadow-blue-900/40 flex items-center justify-center gap-2 transition-transform active:scale-95"
+                 className="w-full py-3 bg-sibos-orange hover:bg-orange-500 rounded-xl font-bold text-white shadow-lg shadow-orange-900/40 flex items-center justify-center gap-2 transition-transform active:scale-95"
                >
                   <Camera size={18} />
                   Absen Masuk
@@ -173,28 +173,28 @@ export const MobileAdminPage: React.FC<MobileAdminPageProps> = ({ onNavigate, on
       <div className="fixed bottom-0 left-0 w-full bg-slate-900 border-t border-white/10 px-6 py-3 flex justify-between items-center z-40 pb-6">
          <button 
             onClick={() => setActiveTab('tasks')}
-            className={`flex flex-col items-center gap-1 ${activeTab === 'tasks' ? 'text-blue-500' : 'text-gray-500'}`}
+            className={`flex flex-col items-center gap-1 ${activeTab === 'tasks' ? 'text-sibos-orange' : 'text-gray-500'}`}
          >
             <CheckSquare size={24} strokeWidth={activeTab === 'tasks' ? 2.5 : 2} />
             <span className="text-[10px] font-medium">To-Do</span>
          </button>
          <button 
             onClick={() => setActiveTab('hr')}
-            className={`flex flex-col items-center gap-1 ${activeTab === 'hr' ? 'text-blue-500' : 'text-gray-500'}`}
+            className={`flex flex-col items-center gap-1 ${activeTab === 'hr' ? 'text-sibos-orange' : 'text-gray-500'}`}
          >
             <Users size={24} strokeWidth={activeTab === 'hr' ? 2.5 : 2} />
             <span className="text-[10px] font-medium">HR</span>
          </button>
          <button 
             onClick={() => setActiveTab('finance')}
-            className={`flex flex-col items-center gap-1 ${activeTab === 'finance' ? 'text-blue-500' : 'text-gray-500'}`}
+            className={`flex flex-col items-center gap-1 ${activeTab === 'finance' ? 'text-sibos-orange' : 'text-gray-500'}`}
          >
             <CreditCard size={24} strokeWidth={activeTab === 'finance' ? 2.5 : 2} />
             <span className="text-[10px] font-medium">Finance</span>
          </button>
          <button 
             onClick={() => setActiveTab('reports')}
-            className={`flex flex-col items-center gap-1 ${activeTab === 'reports' ? 'text-blue-500' : 'text-gray-500'}`}
+            className={`flex flex-col items-center gap-1 ${activeTab === 'reports' ? 'text-sibos-orange' : 'text-gray-500'}`}
          >
             <ClipboardList size={24} strokeWidth={activeTab === 'reports' ? 2.5 : 2} />
             <span className="text-[10px] font-medium">Log</span>

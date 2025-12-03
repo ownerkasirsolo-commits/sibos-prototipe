@@ -30,9 +30,10 @@
         background-color: #020617;
         color: #ffffff;
       }
-      /* Custom scrollbar for webkit */
+      /* Custom scrollbar */
       ::-webkit-scrollbar {
         width: 8px;
+        height: 8px;
       }
       ::-webkit-scrollbar-track {
         background: #0f172a; 
@@ -44,6 +45,11 @@
       ::-webkit-scrollbar-thumb:hover {
         background: #cc5500; 
       }
+      /* Text Selection Color */
+      ::selection {
+        background-color: #FF6B00;
+        color: #ffffff;
+      }
     </style>
   <script type="importmap">
 {
@@ -51,7 +57,8 @@
     "react": "https://aistudiocdn.com/react@^19.2.0",
     "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
     "react/": "https://aistudiocdn.com/react@^19.2.0/",
-    "lucide-react": "https://aistudiocdn.com/lucide-react@^0.554.0"
+    "lucide-react": "https://aistudiocdn.com/lucide-react@^0.554.0",
+    "react-dom": "https://aistudiocdn.com/react-dom@^19.2.0"
   }
 }
 </script>

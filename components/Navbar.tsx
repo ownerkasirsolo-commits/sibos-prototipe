@@ -14,7 +14,7 @@ const navItems: NavItem[] = [
       },
       {
         title: 'Omnichannel',
-        items: ['Integrasi Marketplace', 'Media Sosial', 'Website Toko Online', 'WhatsApp Commerce']
+        items: ['Integrasi Marketplace', 'Media Sosial', 'Website Toko Online']
       }
     ]
   },
@@ -24,11 +24,11 @@ const navItems: NavItem[] = [
     columns: [
       {
         title: 'Industri',
-        items: ['F&B / Kuliner', 'Ritel & Grosir', 'Jasa & Bengkel', 'Fashion & Apparel', 'Farmasi & Apotek', 'Manufaktur']
+        items: ['F&B / Kuliner', 'Ritel & Grosir', 'Jasa & Perawatan', 'Fashion & Apparel', 'Farmasi & Apotek', 'Manufaktur']
       },
       {
         title: 'Skala Usaha',
-        items: ['UMKM', 'Enterprise', 'Multi-Outlet / Chain', 'Franchise']
+        items: ['Multi-Bisnis', 'UMKM', 'Enterprise', 'Multi-Outlet / Chain', 'Franchise']
       }
     ]
   },
@@ -94,12 +94,29 @@ export const Navbar: React.FC<NavbarProps> = ({ onNavigate, currentPage }) => {
     if (item.includes('Accounting')) { onNavigate('accounting'); return; }
     if (item.includes('AI Assistant')) { onNavigate('ai'); return; }
     if (item.includes('Integrasi Marketplace')) { onNavigate('marketplace'); return; }
+    if (item.includes('Media Sosial')) { onNavigate('social-media'); return; } 
+    if (item.includes('Website Toko Online')) { onNavigate('webstore'); return; }
+
+    // Solution Routing
+    if (item.includes('F&B') || item.includes('Kuliner')) { onNavigate('solution-fnb'); return; }
+    if (item.includes('Ritel') || item.includes('Grosir')) { onNavigate('solution-retail'); return; }
+    if (item.includes('Jasa') || item.includes('Perawatan')) { onNavigate('solution-service'); return; }
+    if (item.includes('Fashion') || item.includes('Apparel')) { onNavigate('solution-fashion'); return; }
+    if (item.includes('Farmasi') || item.includes('Apotek')) { onNavigate('solution-pharmacy'); return; }
+    if (item.includes('Manufaktur')) { onNavigate('solution-manufacturing'); return; }
+    
+    // Scale Routing
+    if (item === 'Multi-Bisnis') { onNavigate('solution-multibusiness'); return; }
+    if (item === 'UMKM') { onNavigate('solution-umkm'); return; }
+    if (item === 'Enterprise') { onNavigate('solution-enterprise'); return; }
+    if (item.includes('Multi-Outlet')) { onNavigate('solution-multioutlet'); return; }
+    if (item === 'Franchise') { onNavigate('solution-franchise'); return; }
 
     // Community Routing
     if (item.includes('Investor')) { onNavigate('community-investor'); return; }
     if (item.includes('Developer')) { onNavigate('community-developer'); return; }
     if (item.includes('Partner')) { onNavigate('community-partner'); return; }
-    if (item.includes('User')) { onNavigate('community-user'); return; } // New User Route
+    if (item.includes('User')) { onNavigate('community-user'); return; }
 
     if (item.includes('Sejarah') || item.includes('Tentang') || item.includes('Founder') || item.includes('Visi')) {
       onNavigate('about');
@@ -142,11 +159,11 @@ export const Navbar: React.FC<NavbarProps> = ({ onNavigate, currentPage }) => {
       <div className="bg-slate-900 border-b border-white/10 relative z-50 h-20 flex items-center">
         <div className="container mx-auto px-6 flex justify-between items-center">
           {/* Logo */}
-          <div className="flex items-center gap-2 font-bold text-2xl tracking-tighter cursor-pointer" onClick={handleLogoClick}>
-            <div className="w-10 h-10 bg-gradient-to-br from-sibos-orange to-red-600 rounded-lg flex items-center justify-center text-white shadow-lg shadow-orange-900/50">
+          <div className="flex items-center gap-2 font-bold text-2xl tracking-tighter cursor-pointer group" onClick={handleLogoClick}>
+            <div className="w-10 h-10 bg-gradient-to-br from-sibos-orange to-red-600 rounded-lg flex items-center justify-center text-white shadow-lg shadow-orange-900/50 group-hover:scale-105 transition-transform">
               S
             </div>
-            <span className="text-white">SIBOS</span>
+            <span className="text-white group-hover:text-sibos-orange transition-colors">SIBOS</span>
           </div>
 
           {/* Desktop Menu */}
@@ -160,7 +177,8 @@ export const Navbar: React.FC<NavbarProps> = ({ onNavigate, currentPage }) => {
                     ? 'text-sibos-orange border-sibos-orange' 
                     : 'text-gray-300 border-transparent hover:text-white'}
                   ${(item.id === 'community' && (currentPage === 'community' || currentPage === 'about' || currentPage.includes('community-'))) ? 'text-sibos-orange' : ''}  
-                  ${(item.id === 'ecosystem' && (currentPage === 'pos' || currentPage === 'crm' || currentPage === 'irm' || currentPage === 'hrm' || currentPage === 'accounting' || currentPage === 'ai' || currentPage === 'marketplace')) ? 'text-sibos-orange' : ''}
+                  ${(item.id === 'ecosystem' && (currentPage === 'pos' || currentPage === 'crm' || currentPage === 'irm' || currentPage === 'hrm' || currentPage === 'accounting' || currentPage === 'ai' || currentPage === 'marketplace' || currentPage === 'social-media' || currentPage === 'webstore')) ? 'text-sibos-orange' : ''}
+                  ${(item.id === 'solutions' && (currentPage === 'solution-fnb' || currentPage === 'solution-retail' || currentPage === 'solution-service' || currentPage === 'solution-fashion' || currentPage === 'solution-pharmacy' || currentPage === 'solution-manufacturing' || currentPage === 'solution-umkm' || currentPage === 'solution-enterprise' || currentPage === 'solution-multioutlet' || currentPage === 'solution-franchise' || currentPage === 'solution-multibusiness')) ? 'text-sibos-orange' : ''}
                 `}
               >
                 {item.label}
@@ -189,7 +207,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onNavigate, currentPage }) => {
           <div className="flex items-center gap-4">
             <button 
                 onClick={() => onNavigate('login')}
-                className="hidden md:flex px-6 py-2 bg-sibos-orange hover:bg-orange-700 text-white rounded-full font-semibold transition-all shadow-lg shadow-orange-900/40 text-sm items-center gap-2"
+                className="hidden md:flex px-6 py-2 bg-gradient-to-r from-sibos-orange to-red-600 hover:from-orange-500 hover:to-red-500 text-white rounded-full font-semibold transition-all shadow-lg shadow-orange-900/40 text-sm items-center gap-2 hover:scale-105"
             >
               <LogIn size={16} />
               Login / Masuk
@@ -326,7 +344,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onNavigate, currentPage }) => {
                     onNavigate('login');
                     setMobileMenuOpen(false);
                 }}
-                className="w-full py-4 bg-sibos-orange text-white rounded-xl font-bold text-lg flex items-center justify-center gap-3 shadow-lg shadow-orange-900/40 active:scale-95 transition-transform"
+                className="w-full py-4 bg-gradient-to-r from-sibos-orange to-red-600 text-white rounded-xl font-bold text-lg flex items-center justify-center gap-3 shadow-lg shadow-orange-900/40 active:scale-95 transition-transform"
               >
                 <LogIn size={20} />
                 Login / Masuk

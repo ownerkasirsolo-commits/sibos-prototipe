@@ -5,8 +5,13 @@ import {
   MessageCircle, Layers, ArrowRight, CheckCircle 
 } from 'lucide-react';
 import { GlassCard } from './ui/GlassCard';
+import { Page } from '../types';
 
-export const MarketplacePage: React.FC = () => {
+interface MarketplacePageProps {
+    onNavigate?: (page: Page) => void;
+}
+
+export const MarketplacePage: React.FC<MarketplacePageProps> = ({ onNavigate }) => {
   return (
     <div className="pt-20 min-h-screen bg-slate-950 animate-in fade-in duration-500">
       
@@ -34,13 +39,13 @@ export const MarketplacePage: React.FC = () => {
             SIBOS OMNICHANNEL
           </div>
           <h1 className="text-5xl md:text-7xl font-extrabold text-white mb-6 leading-tight drop-shadow-2xl">
-            Jualan di Mana Saja,<br />
+            Invasi Pasar Digital <br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-400 to-sibos-orange">
-              Atur di Satu Tempat
+              Tanpa Kehilangan Kendali
             </span>
           </h1>
           <p className="text-xl text-gray-200 max-w-3xl mx-auto leading-relaxed drop-shadow-md mb-10">
-            Tokopedia, Shopee, TikTok Shop, Lazada, hingga Website Toko sendiri. Semua pesanan dan stok tersinkronisasi otomatis dalam satu dashboard SIBOS.
+            Jangan mau didikte aturan main platform oren atau hijau. Jadilah raja di rumah sendiri. Tokopedia, Shopee, TikTok Shop, Lazada—semua tunduk pada satu dashboard SIBOS.
           </p>
           <div className="flex justify-center gap-4">
              <div className="flex items-center gap-2 px-4 py-2 bg-white/5 rounded-lg border border-white/10">
@@ -163,17 +168,19 @@ export const MarketplacePage: React.FC = () => {
          </div>
       </section>
 
-       {/* CTA */}
+       {/* Cross-Link to Webstore */}
        <section className="py-20 text-center container mx-auto px-6">
-        <GlassCard className="max-w-4xl mx-auto p-12 relative overflow-hidden bg-gradient-to-br from-slate-900 to-blue-900/30 border-blue-500/20">
+        <GlassCard className="max-w-4xl mx-auto p-12 relative overflow-hidden bg-gradient-to-br from-slate-900 to-cyan-900/30 border-cyan-500/20">
            <div className="relative z-10">
-              <ShoppingBag size={48} className="text-blue-400 mx-auto mb-6" />
-              <h2 className="text-3xl font-bold text-white mb-6">Siap Ekspansi ke Online?</h2>
-              <p className="text-gray-300 mb-8 max-w-2xl mx-auto">
-                 Kelola ribuan pesanan dari berbagai marketplace tanpa takut stok berantakan. Aktifkan modul Omnichannel SIBOS sekarang.
+              <h2 className="text-3xl font-bold text-white mb-6">Sudah Jago Jualan di Marketplace?</h2>
+              <p className="text-gray-300 mb-8 max-w-2xl mx-auto text-lg">
+                 Marketplace bagus untuk mencari pelanggan baru, tapi buruk untuk membangun loyalitas. Saatnya Anda punya "Markas Besar" sendiri agar tidak tergantung pada algoritma orang lain.
               </p>
-              <button className="px-8 py-4 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-bold transition-all shadow-lg shadow-blue-900/50 flex items-center gap-2 mx-auto">
-                  Mulai Integrasi
+              <button 
+                onClick={() => onNavigate && onNavigate('webstore')}
+                className="px-8 py-4 bg-cyan-600 hover:bg-cyan-500 text-white rounded-xl font-bold transition-all shadow-lg shadow-cyan-900/50 flex items-center gap-2 mx-auto"
+              >
+                  Buat Website Toko Online
                   <ArrowRight size={20} />
               </button>
            </div>

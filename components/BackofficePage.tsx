@@ -2,7 +2,9 @@
 import React from 'react';
 import { 
   LayoutDashboard, ShoppingCart, Users, Package, 
-  DollarSign, Activity, RotateCcw
+  DollarSign, Activity, RotateCcw, Utensils, ShoppingBag,
+  ArrowRight, CheckCircle2, Store, TrendingUp,
+  Wallet, FileBarChart, Plus, Search, ChefHat, Clock, AlertTriangle, Calendar
 } from 'lucide-react';
 import { UserRole, Page, BusinessCategory, HardwareModule, AppModule } from '../types';
 import { GlassCard } from './ui/GlassCard';
@@ -24,184 +26,206 @@ export const BackofficePage: React.FC<BackofficePageProps> = ({
     activeModules = [],
     onNavigate 
 }) => {
-  const { stats, transactions, resetSimulation, selectedOutlet } = useSibos(); 
+  const { stats, transactions, resetSimulation, selectedOutlet, products, seedDatabase } = useSibos(); 
 
-  // Role-based content helper
-  const getRoleBadge = () => {
-    switch(userRole) {
-        case 'owner': return { label: 'Owner' };
-        case 'admin': return { label: 'Administrator' };
-        case 'supervisor': return { label: 'Supervisor' };
-        default: return { label: 'Staff' };
-    }
-  };
+  // --- COMPONENT: F&B DASHBOARD ---
+  const FnBDashboard = () => (
+      <div className="space-y-6">
+          {/* Quick Stats Row */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div className="p-5 bg-gradient-to-br from-orange-900/40 to-slate-900 border border-orange-500/20 rounded-2xl relative overflow-hidden group">
+                  <div className="absolute -right-4 -top-4 bg-orange-500/10 w-24 h-24 rounded-full blur-2xl group-hover:bg-orange-500/20 transition-all"></div>
+                  <div className="flex justify-between items-start mb-2">
+                      <div className="p-2 bg-orange-500/20 rounded-lg text-orange-400"><Utensils size={20}/></div>
+                      <span className="text-xs text-green-400 bg-green-500/10 px-2 py-0.5 rounded font-bold">Open</span>
+                  </div>
+                  <div className="text-2xl font-bold text-white mb-1">0 Meja</div>
+                  <div className="text-xs text-gray-400">Total Terisi</div>
+              </div>
+              
+              <div className="p-5 bg-slate-900 border border-white/5 rounded-2xl">
+                  <div className="flex justify-between items-start mb-2">
+                      <div className="p-2 bg-sibos-orange/10 rounded-lg text-sibos-orange"><ChefHat size={20}/></div>
+                  </div>
+                  <div className="text-2xl font-bold text-white mb-1">0 Order</div>
+                  <div className="text-xs text-gray-400">Antrian Dapur</div>
+              </div>
 
-  const roleInfo = getRoleBadge();
+              <div className="p-5 bg-slate-900 border border-white/5 rounded-2xl">
+                  <div className="flex justify-between items-start mb-2">
+                      <div className="p-2 bg-green-500/10 rounded-lg text-green-400"><Wallet size={20}/></div>
+                  </div>
+                  <div className="text-2xl font-bold text-white mb-1">Rp {stats.todayRevenue.toLocaleString()}</div>
+                  <div className="text-xs text-gray-400">Omzet Hari Ini</div>
+              </div>
 
+              <div className="p-5 bg-slate-900 border border-white/5 rounded-2xl">
+                  <div className="flex justify-between items-start mb-2">
+                      <div className="p-2 bg-red-500/10 rounded-lg text-red-400"><Calendar size={20}/></div>
+                  </div>
+                  <div className="text-2xl font-bold text-white mb-1">0</div>
+                  <div className="text-xs text-gray-400">Reservasi Masuk</div>
+              </div>
+          </div>
+
+          {/* Quick Actions for Restaurant Owner */}
+          <div>
+              <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-3">Aksi Cepat Restoran</h3>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <button onClick={() => onNavigate('pos-app')} className="p-4 bg-slate-800 hover:bg-slate-700 rounded-xl border border-white/5 flex flex-col items-center gap-2 transition-all group">
+                      <Plus size={24} className="text-sibos-orange group-hover:scale-110 transition-transform" />
+                      <span className="text-sm font-bold text-white">Order Baru</span>
+                  </button>
+                  <button onClick={() => onNavigate('kds-app')} className="p-4 bg-slate-800 hover:bg-slate-700 rounded-xl border border-white/5 flex flex-col items-center gap-2 transition-all group">
+                      <ChefHat size={24} className="text-gray-400 group-hover:text-white transition-colors" />
+                      <span className="text-sm font-bold text-white">Monitor Dapur</span>
+                  </button>
+                  <button onClick={() => onNavigate('irm-app')} className="p-4 bg-slate-800 hover:bg-slate-700 rounded-xl border border-white/5 flex flex-col items-center gap-2 transition-all group">
+                      <Package size={24} className="text-gray-400 group-hover:text-white transition-colors" />
+                      <span className="text-sm font-bold text-white">Cek Bahan Baku</span>
+                  </button>
+                  <button onClick={() => onNavigate('booking-app')} className="p-4 bg-slate-800 hover:bg-slate-700 rounded-xl border border-white/5 flex flex-col items-center gap-2 transition-all group">
+                      <Calendar size={24} className="text-gray-400 group-hover:text-white transition-colors" />
+                      <span className="text-sm font-bold text-white">Atur Reservasi</span>
+                  </button>
+              </div>
+          </div>
+
+          {/* Zero State Guide for F&B */}
+          {products.length === 0 && (
+              <div className="p-6 bg-orange-900/10 border border-orange-500/20 rounded-2xl flex items-start gap-4">
+                  <div className="p-3 bg-orange-500/20 rounded-full text-orange-400 shrink-0"><CheckCircle2 size={24}/></div>
+                  <div>
+                      <h3 className="text-lg font-bold text-white mb-2">Setup Restoran Anda</h3>
+                      <p className="text-gray-400 text-sm mb-4">Database masih kosong. Mari mulai dengan langkah-langkah berikut:</p>
+                      <div className="flex gap-3">
+                          <button onClick={() => onNavigate('irm-app')} className="px-4 py-2 bg-gradient-to-r from-sibos-orange to-red-600 hover:from-orange-500 hover:to-red-500 rounded-lg text-sm font-bold text-white shadow-lg">1. Input Menu</button>
+                          <button onClick={() => onNavigate('booking-app')} className="px-4 py-2 bg-slate-800 border border-white/10 rounded-lg text-sm font-bold text-gray-300">2. Atur Meja</button>
+                      </div>
+                  </div>
+              </div>
+          )}
+      </div>
+  );
+
+  // --- COMPONENT: RETAIL DASHBOARD ---
+  const RetailDashboard = () => (
+      <div className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="p-5 bg-gradient-to-br from-orange-900/40 to-slate-900 border border-orange-500/20 rounded-2xl relative overflow-hidden">
+                   <div className="absolute -right-4 -top-4 bg-orange-500/10 w-24 h-24 rounded-full blur-2xl"></div>
+                  <div className="flex justify-between items-start mb-2">
+                      <div className="p-2 bg-orange-500/20 rounded-lg text-orange-400"><ShoppingBag size={20}/></div>
+                  </div>
+                  <div className="text-2xl font-bold text-white mb-1">Rp {stats.todayRevenue.toLocaleString()}</div>
+                  <div className="text-xs text-gray-400">Penjualan Hari Ini</div>
+              </div>
+              <div className="p-5 bg-slate-900 border border-white/5 rounded-2xl">
+                  <div className="flex justify-between items-start mb-2">
+                      <div className="p-2 bg-red-500/10 rounded-lg text-red-400"><AlertTriangle size={20}/></div>
+                  </div>
+                  <div className="text-2xl font-bold text-white mb-1">{stats.lowStockCount} Item</div>
+                  <div className="text-xs text-gray-400">Stok Menipis</div>
+              </div>
+              <div className="p-5 bg-slate-900 border border-white/5 rounded-2xl">
+                  <div className="flex justify-between items-start mb-2">
+                      <div className="p-2 bg-green-500/10 rounded-lg text-green-400"><Package size={20}/></div>
+                  </div>
+                  <div className="text-2xl font-bold text-white mb-1">{products.length} SKU</div>
+                  <div className="text-xs text-gray-400">Total Produk</div>
+              </div>
+          </div>
+
+          {/* Zero State Guide for Retail */}
+          {products.length === 0 && (
+              <div className="p-6 bg-slate-800 border border-white/10 rounded-2xl text-center">
+                  <Package size={48} className="mx-auto text-gray-600 mb-4"/>
+                  <h3 className="text-lg font-bold text-white mb-2">Toko Belum Ada Isi</h3>
+                  <p className="text-gray-400 text-sm mb-6">Mulai dengan memasukkan stok barang dagangan Anda.</p>
+                  <button onClick={() => onNavigate('irm-app')} className="px-6 py-3 bg-gradient-to-r from-sibos-orange to-red-600 hover:from-orange-500 hover:to-red-500 rounded-xl text-white font-bold shadow-lg">
+                      + Tambah Produk
+                  </button>
+              </div>
+          )}
+      </div>
+  );
+
+  // --- COMPONENT: GENERIC DASHBOARD (Service, Manufacture, etc) ---
+  const GenericDashboard = () => (
+      <div className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="p-5 bg-gradient-to-br from-blue-900/40 to-slate-900 border border-blue-500/20 rounded-2xl">
+                  <div className="flex justify-between items-start mb-2">
+                      <div className="p-2 bg-blue-500/20 rounded-lg text-blue-400"><Activity size={20}/></div>
+                  </div>
+                  <div className="text-2xl font-bold text-white mb-1">Aktif</div>
+                  <div className="text-xs text-gray-400">Status Operasional</div>
+              </div>
+              <div className="p-5 bg-slate-900 border border-white/5 rounded-2xl">
+                  <div className="flex justify-between items-start mb-2">
+                      <div className="p-2 bg-green-500/10 rounded-lg text-green-400"><Wallet size={20}/></div>
+                  </div>
+                  <div className="text-2xl font-bold text-white mb-1">Rp {stats.todayRevenue.toLocaleString()}</div>
+                  <div className="text-xs text-gray-400">Pendapatan Hari Ini</div>
+              </div>
+              <div className="p-5 bg-slate-900 border border-white/5 rounded-2xl">
+                  <div className="flex justify-between items-start mb-2">
+                      <div className="p-2 bg-purple-500/10 rounded-lg text-purple-400"><Users size={20}/></div>
+                  </div>
+                  <div className="text-2xl font-bold text-white mb-1">{transactions.length}</div>
+                  <div className="text-xs text-gray-400">Total Transaksi</div>
+              </div>
+          </div>
+          
+          <div className="p-8 text-center bg-slate-800/50 border border-white/5 rounded-2xl">
+              <Store size={48} className="mx-auto text-gray-600 mb-4"/>
+              <h3 className="text-lg font-bold text-white mb-2">Selamat Datang di SIBOS</h3>
+              <p className="text-gray-400 text-sm mb-6 max-w-md mx-auto">
+                  Dashboard spesifik untuk kategori <strong>{selectedOutlet.category?.toUpperCase()}</strong> sedang disiapkan. Sementara itu, Anda dapat menggunakan modul-modul di menu sebelah kiri.
+              </p>
+              <button onClick={() => onNavigate('pos-app')} className="px-6 py-3 bg-blue-600 hover:bg-blue-500 rounded-xl text-white font-bold shadow-lg">
+                  Buka Aplikasi Kasir
+              </button>
+          </div>
+      </div>
+  );
+
+  // --- RENDER MAIN ---
   return (
     <BackofficeLayout
         title="Dashboard"
-        icon={<LayoutDashboard size={20} className="text-blue-500"/>}
+        icon={<LayoutDashboard size={20} className="text-gray-400"/>}
         onNavigate={onNavigate}
         userRole={userRole}
         activeHardware={activeHardware}
         activeModules={activeModules}
-        actions={
-            <button 
-                onClick={resetSimulation}
-                title="Reset Simulasi Data"
-                className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-red-900/30 text-red-400 hover:bg-red-900/50 border border-red-500/30 text-xs font-bold"
-            >
-                <RotateCcw size={14} /> Reset Data
-            </button>
-        }
     >
-         <div className="p-6 md:p-8">
+         <div className="p-4 md:p-8 max-w-[1600px] mx-auto pb-24">
             
-            {/* Role-Based Welcome Banner */}
-            <div className="mb-8 p-6 rounded-2xl bg-gradient-to-r from-sibos-orange/20 to-slate-900 border border-sibos-orange/20 flex flex-col md:flex-row items-center justify-between gap-4">
+            {/* Header */}
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
                 <div>
-                    <h1 className="text-2xl font-bold text-white mb-2">Halo, {roleInfo.label}! 👋</h1>
-                    <p className="text-gray-400">
-                        Outlet Aktif: <span className="font-bold text-white">{selectedOutlet.name}</span>.
-                    </p>
+                    <div className="flex items-center gap-2 text-gray-400 text-xs md:text-sm mb-1 uppercase tracking-widest font-bold">
+                        <Store size={14} className="text-sibos-orange" /> <span>{selectedOutlet.category?.toUpperCase() || 'BISNIS'}</span>
+                    </div>
+                    <h1 className="text-2xl md:text-3xl font-bold text-white">
+                        {selectedOutlet.name}
+                    </h1>
                 </div>
-                <div className="flex gap-3">
-                    {userRole === 'staff' || userRole === 'owner' ? (
-                        <button 
-                            onClick={() => onNavigate('pos-app')}
-                            className="px-4 py-2 bg-sibos-orange hover:bg-orange-600 rounded-lg text-white text-sm font-bold shadow-lg shadow-orange-900/40"
-                        >
-                            Buka Mesin Kasir
-                        </button>
-                    ) : null}
+                <div className="flex items-center gap-2">
+                    <button onClick={resetSimulation} className="p-2.5 rounded-xl bg-slate-800 border border-white/10 text-gray-400 hover:text-white hover:bg-white/5" title="Reset Data"><RotateCcw size={18}/></button>
                 </div>
             </div>
 
-            {/* STATS GRID */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                <GlassCard className="!p-5">
-                    <div className="flex justify-between items-start mb-4">
-                        <div className="p-2 rounded-lg bg-white/5 text-green-500">
-                            <DollarSign size={20} />
-                        </div>
-                        <div className="text-xs font-bold px-2 py-1 rounded-full bg-white/5 text-green-400">Live</div>
-                    </div>
-                    <div className="text-2xl font-bold text-white mb-1">Rp {stats.todayRevenue.toLocaleString()}</div>
-                    <div className="text-xs text-gray-500">Total Penjualan Hari Ini</div>
-                </GlassCard>
+            {/* Conditional Rendering based on Industry */}
+            {selectedOutlet.category === 'fnb' ? (
+                <FnBDashboard />
+            ) : selectedOutlet.category === 'retail' || selectedOutlet.category === 'fashion' ? (
+                <RetailDashboard />
+            ) : (
+                <GenericDashboard />
+            )}
 
-                <GlassCard className="!p-5">
-                    <div className="flex justify-between items-start mb-4">
-                        <div className="p-2 rounded-lg bg-white/5 text-blue-500">
-                            <ShoppingCart size={20} />
-                        </div>
-                        <div className="text-xs font-bold px-2 py-1 rounded-full bg-white/5 text-blue-400">Active</div>
-                    </div>
-                    <div className="text-2xl font-bold text-white mb-1">{stats.todayTransactions} Order</div>
-                    <div className="text-xs text-gray-500">Jumlah Transaksi</div>
-                </GlassCard>
-
-                <GlassCard className="!p-5">
-                    <div className="flex justify-between items-start mb-4">
-                        <div className="p-2 rounded-lg bg-white/5 text-purple-500">
-                            <Users size={20} />
-                        </div>
-                        <div className="text-xs font-bold px-2 py-1 rounded-full bg-white/5 text-purple-400">+2%</div>
-                    </div>
-                    <div className="text-2xl font-bold text-white mb-1">18 Orang</div>
-                    <div className="text-xs text-gray-500">Pelanggan Baru</div>
-                </GlassCard>
-
-                <GlassCard className="!p-5">
-                    <div className="flex justify-between items-start mb-4">
-                        <div className="p-2 rounded-lg bg-white/5 text-red-500">
-                            <Package size={20} />
-                        </div>
-                        <div className={`text-xs font-bold px-2 py-1 rounded-full bg-white/5 ${stats.lowStockCount > 0 ? 'text-red-400' : 'text-gray-400'}`}>
-                            {stats.lowStockCount > 0 ? 'Alert' : 'Aman'}
-                        </div>
-                    </div>
-                    <div className="text-2xl font-bold text-white mb-1">{stats.lowStockCount} Item</div>
-                    <div className="text-xs text-gray-500">Stok Menipis</div>
-                </GlassCard>
-            </div>
-
-            {/* CONTENT SPLIT */}
-            <div className="grid lg:grid-cols-3 gap-8">
-                
-                {/* Main Activity Chart Area (Dummy) */}
-                <div className="lg:col-span-2 space-y-8">
-                    <GlassCard className="h-96 flex flex-col">
-                        <div className="flex justify-between items-center mb-6">
-                            <h3 className="font-bold text-white flex items-center gap-2">
-                                <Activity size={18} className="text-sibos-orange" />
-                                Grafik Penjualan (Live)
-                            </h3>
-                            <select className="bg-black/30 text-white text-xs border border-white/10 rounded px-2 py-1">
-                                <option>Hari Ini</option>
-                                <option>Minggu Ini</option>
-                                <option>Bulan Ini</option>
-                            </select>
-                        </div>
-                        
-                        {/* Fake Chart Visualization */}
-                        <div className="flex-1 flex items-end gap-2 px-4 pb-4">
-                            {[40, 65, 30, 80, 55, 90, 45, 70, 60, 85, 95, 50].map((h, idx) => (
-                                <div key={idx} className="flex-1 flex flex-col gap-2 group cursor-pointer">
-                                    <div 
-                                        className="w-full bg-sibos-orange/20 rounded-t-sm relative group-hover:bg-sibos-orange transition-colors"
-                                        style={{ height: `${h}%` }}
-                                    >
-                                        <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-white text-black text-[10px] font-bold px-1 rounded opacity-0 group-hover:opacity-100">
-                                            {h * 100}k
-                                        </div>
-                                    </div>
-                                    <div className="text-[10px] text-gray-500 text-center">{idx * 2}am</div>
-                                </div>
-                            ))}
-                        </div>
-                    </GlassCard>
-                </div>
-
-                {/* Right Widgets */}
-                <div className="space-y-6">
-                    {/* Recent Transactions (DYNAMIC) */}
-                    <GlassCard>
-                        <h3 className="font-bold text-white mb-4 text-sm">Transaksi Terakhir</h3>
-                        <div className="space-y-4 max-h-80 overflow-y-auto custom-scrollbar pr-1">
-                            {transactions.slice(0, 6).map((tx, idx) => (
-                                <div key={idx} className="flex justify-between items-center pb-3 border-b border-white/5 last:border-0 last:pb-0">
-                                    <div>
-                                        <div className="text-white text-sm font-medium">{tx.items[0].name} {tx.items.length > 1 && `+ ${tx.items.length - 1} lainnya`}</div>
-                                        <div className="text-xs text-gray-500">{tx.id} • {new Date(tx.date).toLocaleTimeString()}</div>
-                                    </div>
-                                    <div className="text-sibos-orange text-sm font-bold">Rp {tx.total.toLocaleString()}</div>
-                                </div>
-                            ))}
-                            {transactions.length === 0 && (
-                                <div className="text-center text-gray-500 text-xs italic py-4">Belum ada transaksi</div>
-                            )}
-                        </div>
-                    </GlassCard>
-
-                    {/* AI Insight Widget */}
-                    <div className="p-5 rounded-2xl bg-gradient-to-br from-violet-900/40 to-slate-900 border border-violet-500/20">
-                        <div className="flex items-center gap-2 mb-3">
-                            <div className="w-2 h-2 rounded-full bg-violet-500 animate-pulse"></div>
-                            <span className="text-xs font-bold text-violet-400 uppercase tracking-wider">AI Insight</span>
-                        </div>
-                        <p className="text-sm text-gray-200 leading-relaxed mb-4">
-                            "Penjualan Kopi meningkat 20% karena hujan. Pertimbangkan untuk restock biji kopi Arabika besok pagi."
-                        </p>
-                        <button className="w-full py-2 bg-white/5 hover:bg-white/10 rounded-lg text-xs text-white border border-white/10 transition-colors">
-                            Lihat Analisis Lengkap
-                        </button>
-                    </div>
-
-                </div>
-
-            </div>
          </div>
     </BackofficeLayout>
   );

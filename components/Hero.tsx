@@ -29,20 +29,20 @@ export const Hero: React.FC<HeroProps> = ({ onNavigate }) => {
 
       <div className="container mx-auto px-6 relative">
         <div className="max-w-5xl mx-auto text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-red-500/10 border border-red-500/30 text-red-400 text-xs font-bold tracking-widest uppercase mb-8 shadow-[0_0_20px_rgba(220,38,38,0.3)] backdrop-blur-md animate-in slide-in-from-top-4 duration-700">
-            <Flame size={12} className="fill-red-500 animate-pulse" />
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-sibos-orange/20 to-red-600/20 border border-sibos-orange/30 text-sibos-orange text-xs font-bold tracking-widest uppercase mb-8 shadow-[0_0_20px_rgba(255,107,0,0.3)] backdrop-blur-md animate-in slide-in-from-top-4 duration-700">
+            <Flame size={12} className="fill-sibos-orange animate-pulse" />
             REVOLUSI DIGITAL ARUS BAWAH
           </div>
           
           <h1 className="text-5xl md:text-8xl font-extrabold text-white mb-8 leading-tight tracking-tight drop-shadow-2xl">
             Runtuhkan Dominasi. <br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-sibos-orange via-red-500 to-purple-600">
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-sibos-orange via-red-500 to-yellow-500">
               Rebut Kedaulatan.
             </span>
           </h1>
           
           <p className="text-lg md:text-2xl text-gray-300 mb-12 leading-relaxed max-w-3xl mx-auto font-light">
-            Di dunia di mana raksasa teknologi memakan yang kecil, SIBOS hadir sebagai perisai. Kami bukan startup yang membakar uang investor untuk mematikan pasar. Kami adalah gerakan. Dari garasi di Solo, untuk kemakmuran ekonomi rakyat.
+            Satu ekosistem untuk mengelola Holding Bisnis Anda. Dari Warung Kopi, Retail Fashion, hingga Pabrik Roti—pantau dan kendalikan semua unit usaha dalam satu layar dashboard yang kuat.
           </p>
 
           <div className="flex flex-col md:flex-row gap-6 justify-center items-center">
@@ -55,7 +55,7 @@ export const Hero: React.FC<HeroProps> = ({ onNavigate }) => {
             </button>
             <button 
               onClick={handleScrollToFeatures}
-              className="px-10 py-5 bg-white/5 hover:bg-white/10 border border-white/10 text-white rounded-2xl font-bold text-lg transition-all backdrop-blur-sm flex items-center gap-3 hover:border-white/30"
+              className="px-10 py-5 bg-white/5 hover:bg-white/10 border border-white/10 text-white rounded-2xl font-bold text-lg transition-all backdrop-blur-sm flex items-center gap-3 hover:border-sibos-orange/30 hover:text-sibos-orange"
             >
               <PlayCircle size={24} />
               Pelajari Sistem
@@ -64,13 +64,13 @@ export const Hero: React.FC<HeroProps> = ({ onNavigate }) => {
 
           <div className="mt-20 pt-10 border-t border-white/5 grid grid-cols-2 md:grid-cols-4 gap-12 text-center opacity-80">
             {[
-              { label: 'Platform', val: 'Universal' },
+              { label: 'Platform', val: 'Multi-Usaha' },
               { label: 'Kepemilikan', val: 'Komunitas' },
               { label: 'Misi', val: 'Keadilan' },
               { label: 'Status', val: 'Independen' }
             ].map((stat, i) => (
-              <div key={i} className="transform hover:scale-110 transition-transform duration-300 cursor-default">
-                <div className="text-3xl font-black text-white mb-1">{stat.val}</div>
+              <div key={i} className="transform hover:scale-110 transition-transform duration-300 cursor-default group">
+                <div className="text-3xl font-black text-white mb-1 group-hover:text-sibos-orange transition-colors">{stat.val}</div>
                 <div className="text-xs text-gray-500 uppercase tracking-[0.2em] font-bold">{stat.label}</div>
               </div>
             ))}

@@ -52,7 +52,7 @@ export const CustomerDisplayPage: React.FC<CustomerDisplayPageProps> = ({ onNavi
          </div>
 
          {/* Cart List */}
-         <div className="flex-1 overflow-y-auto p-8 space-y-4">
+         <div className="flex-1 overflow-y-auto p-8 space-y-4 custom-scrollbar">
             {liveCart.length > 0 ? liveCart.map((item, idx) => (
                 <div key={idx} className="flex justify-between items-start p-4 rounded-2xl bg-white/5 border border-white/5 animate-in slide-in-from-left duration-500">
                     <div>

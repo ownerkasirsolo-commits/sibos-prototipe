@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { 
   Box, Warehouse, ClipboardList, Truck, 
@@ -32,16 +33,16 @@ export const IRMPage: React.FC = () => {
         <div className="container mx-auto px-6 text-center relative z-10">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 text-cyan-400 text-xs font-bold tracking-wider mb-8 shadow-lg shadow-cyan-900/20 backdrop-blur-md">
             <Warehouse size={14} className="animate-pulse" />
-            INVENTORY RELATIONSHIP MANAGEMENT
+            THE IRON DOME OF ASSETS
           </div>
           <h1 className="text-5xl md:text-7xl font-extrabold text-white mb-6 leading-tight drop-shadow-2xl">
-            Kontrol Stok Tanpa <br />
+            Hentikan Pendarahan <br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">
-              Celah & Kebocoran
+              Aset Anda
             </span>
           </h1>
           <p className="text-xl text-gray-200 max-w-3xl mx-auto leading-relaxed drop-shadow-md">
-            Stok adalah uang yang mengendap. SIBOS IRM membantu Anda melacak setiap barang yang masuk dan keluar secara real-time, multi-gudang, dan akurat.
+            Stok hilang bukan sekadar selisih angka, itu adalah "pencurian" terhadap keringat Anda. IRM adalah *Iron Dome* yang melindungi aset dari kebocoran internal maupun eksternal. Lacak setiap gram barang yang masuk dan keluar.
           </p>
         </div>
       </section>
